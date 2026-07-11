@@ -9,6 +9,7 @@ export interface Match {
   fecha: string;
   tipo: 'Liga' | 'Amistoso' | 'Copa';
   condicion?: 'Local' | 'Visitante';
+  jornada?: string;
   lugar: string;
   estado: string;
   rival?: Team;
@@ -54,6 +55,12 @@ export function MatchCard({ match, localTeamName = 'SÉNECA C.F.', localTeamLogo
         )}>
           {match.tipo.toUpperCase()}
         </span>
+
+        {match.jornada && (
+          <span className="absolute left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-bold rounded-full bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 whitespace-nowrap">
+            {match.jornada}
+          </span>
+        )}
 
         {onDelete && (
           <button

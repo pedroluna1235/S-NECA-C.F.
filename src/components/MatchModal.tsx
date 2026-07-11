@@ -22,6 +22,7 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
     fecha: '',
     tipo: 'Liga' as 'Liga' | 'Amistoso' | 'Copa',
     condicion: 'Local' as 'Local' | 'Visitante',
+    jornada: '',
     lugar: '',
     estado: 'Planificado'
   });
@@ -31,12 +32,13 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
       fetchTeams();
       if (matchToEdit) {
         setFormData({
-          rival_id: matchToEdit.rival_id,
-          fecha: matchToEdit.fecha,
-          tipo: matchToEdit.tipo,
+          rival_id: matchToEdit.rival_id || '',
+          fecha: matchToEdit.fecha || '',
+          tipo: matchToEdit.tipo || 'Liga',
           condicion: matchToEdit.condicion || 'Local',
+          jornada: matchToEdit.jornada || '',
           lugar: matchToEdit.lugar || '',
-          estado: matchToEdit.estado || 'Planificado'
+          estado: matchToEdit.estado || 'Planificado',
         });
       } else {
         setFormData({
@@ -44,6 +46,7 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
           fecha: new Date().toISOString().split('T')[0],
           tipo: 'Liga',
           condicion: 'Local',
+          jornada: '',
           lugar: '',
           estado: 'Planificado'
         });
@@ -87,6 +90,7 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
         fecha: formData.fecha,
         tipo: formData.tipo,
         condicion: formData.condicion,
+        jornada: formData.jornada,
         lugar: formData.lugar,
         estado: formData.estado
       };
@@ -256,20 +260,36 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
             </div>
           </div>
 
-          {/* Lugar */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Lugar / Estadio (Opcional)</label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-              <input
-                type="text"
-                value={formData.lugar}
-                onChange={(e) => setFormData({ ...formData, lugar: e.target.value })}
-                placeholder="Ej: Estadio Nuevo Arcángel"
-                className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all text-neutral-900 dark:text-white"
-              />
+          {/* Lugar y Jornada */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Jornada / Fase</label>
+                <input
+                  type="text"
+                  name="jornada"
+                  value={formData.jornada}
+                  onChange={(e) => setFormData({ ...formData, jornada: e.target.value })}
+                  placeholder="Ej: Jornada 14, Semifinal..."
+                  className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Lugar del Partido</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={20} />
+                  <input
+                    type="text"
+                    name="lugar"
+                    value={formData.lugar}
+                    onChange={(e) => setFormData({ ...formData, lugar: e.target.value })}
+                    required
+                    placeholder="Ej: Instalaciones Deportivas Enrique Puga"
+                    className="w-full pl-10 pr-4 py-3 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
           
         </form>
 
