@@ -37,9 +37,9 @@ export function ImageUploader({ url, onUpload, onRemove, bucket, folder = '', la
         .getPublicUrl(filePath);
 
       onUpload(publicUrlData.publicUrl);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading image:', error);
-      alert('Error al subir la imagen');
+      alert('Error al subir la imagen: ' + (error.message || String(error)));
     } finally {
       setUploading(false);
     }

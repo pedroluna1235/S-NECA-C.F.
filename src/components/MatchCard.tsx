@@ -7,7 +7,7 @@ export interface Match {
   id: string;
   rival_id: string;
   fecha: string;
-  tipo: 'Liga' | 'Amistoso';
+  tipo: 'Liga' | 'Amistoso' | 'Copa';
   condicion?: 'Local' | 'Visitante';
   lugar: string;
   estado: string;
@@ -23,6 +23,7 @@ interface MatchCardProps {
 
 export function MatchCard({ match, localTeamName = 'SÉNECA C.F.', localTeamLogo = '/logo.jpg', onDelete }: MatchCardProps) {
   const isLiga = match.tipo === 'Liga';
+  const isCopa = match.tipo === 'Copa';
   const isLocal = match.condicion !== 'Visitante';
 
   // Format date to locale string
@@ -38,7 +39,7 @@ export function MatchCard({ match, localTeamName = 'SÉNECA C.F.', localTeamLogo
       {/* Background decoration */}
       <div className={cn(
         "absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-20 transition-all group-hover:scale-150 duration-700",
-        isLiga ? "bg-red-500" : "bg-blue-500"
+        isLiga ? "bg-red-500" : isCopa ? "bg-amber-500" : "bg-blue-500"
       )} />
 
       {/* Header / Type */}
@@ -47,6 +48,8 @@ export function MatchCard({ match, localTeamName = 'SÉNECA C.F.', localTeamLogo
           "px-3 py-1 text-xs font-bold rounded-full tracking-wider",
           isLiga 
             ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400" 
+            : isCopa
+            ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
             : "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
         )}>
           {match.tipo.toUpperCase()}

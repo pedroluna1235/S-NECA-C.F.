@@ -20,7 +20,7 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
   const [formData, setFormData] = useState({
     rival_id: '',
     fecha: '',
-    tipo: 'Liga' as 'Liga' | 'Amistoso',
+    tipo: 'Liga' as 'Liga' | 'Amistoso' | 'Copa',
     condicion: 'Local' as 'Local' | 'Visitante',
     lugar: '',
     estado: 'Planificado'
@@ -187,7 +187,7 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
                     name="tipo"
                     value="Liga"
                     checked={formData.tipo === 'Liga'}
-                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'Liga' | 'Amistoso' })}
+                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'Liga' | 'Amistoso' | 'Copa' })}
                     className="peer sr-only"
                   />
                   <div className="p-3 text-center rounded-xl border-2 border-neutral-200 dark:border-neutral-700 peer-checked:border-red-500 peer-checked:bg-red-50 dark:peer-checked:bg-red-500/10 peer-checked:text-red-700 dark:peer-checked:text-red-400 font-bold transition-all text-sm">
@@ -198,9 +198,22 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
                   <input
                     type="radio"
                     name="tipo"
+                    value="Copa"
+                    checked={formData.tipo === 'Copa'}
+                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'Liga' | 'Amistoso' | 'Copa' })}
+                    className="peer sr-only"
+                  />
+                  <div className="p-3 text-center rounded-xl border-2 border-neutral-200 dark:border-neutral-700 peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-500/10 peer-checked:text-amber-700 dark:peer-checked:text-amber-400 font-bold transition-all text-sm">
+                    Copa
+                  </div>
+                </label>
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipo"
                     value="Amistoso"
                     checked={formData.tipo === 'Amistoso'}
-                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'Liga' | 'Amistoso' })}
+                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'Liga' | 'Amistoso' | 'Copa' })}
                     className="peer sr-only"
                   />
                   <div className="p-3 text-center rounded-xl border-2 border-neutral-200 dark:border-neutral-700 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-500/10 peer-checked:text-blue-700 dark:peer-checked:text-blue-400 font-bold transition-all text-sm">

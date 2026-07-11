@@ -6,8 +6,10 @@ import { type Player } from './PlayerCard';
 import { differenceInYears } from 'date-fns';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { VideoModal } from './VideoModal';
+import { ObjectiveModal } from './ObjectiveModal';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
+import { Target } from 'lucide-react';
 
 interface PlayerDetailModalProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ const DEFAULT_STATS_FISICO = { velocidad: 50, salto: 50, agilidad: 50, resistenc
 export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: PlayerDetailModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [isObjectiveModalOpen, setIsObjectiveModalOpen] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
@@ -294,6 +297,12 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
                 <PlayCircle size={20} className="text-purple-600" /> Ver vídeo
               </button>
               <button 
+                onClick={() => setIsObjectiveModalOpen(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-xl font-bold transition-colors shadow-sm"
+              >
+                <Target size={20} /> Objetivo individual
+              </button>
+              <button 
                 onClick={generatePdf}
                 disabled={isGeneratingPdf}
                 className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-colors shadow-md shadow-red-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
@@ -407,11 +416,15 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
         isOpen={isVideoModalOpen}
         onClose={() => setIsVideoModalOpen(false)}
         player={player}
-        onSuccess={() => {
-          onSuccess();
-          // Cerrar modal de vídeo y refrescar vista principal si es necesario.
-          // El onSuccess() padre ya se encarga de recargar.
-        }}
+        onSuccess={onSuccess}
+      />
+      
+      {/* Modal de objetivo individual */}
+      <ObjectiveModal
+        isOpen={isObjectiveModalOpen}
+        onClose={() => setIsObjectiveModalOpen(false)}
+        player={player}
+        onSuccess={onSuccess}
       />
     </div>
   );
