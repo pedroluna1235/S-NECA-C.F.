@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Download, Loader2, Play, AlertCircle, FileJson, Save, Video, CheckCircle2 } from 'lucide-react';
+import { Download, Loader2, Play, AlertCircle, Save, Video } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import ReactPlayer from 'react-player';
