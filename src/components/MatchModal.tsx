@@ -21,6 +21,7 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
     rival_id: '',
     fecha: '',
     tipo: 'Liga' as 'Liga' | 'Amistoso',
+    condicion: 'Local' as 'Local' | 'Visitante',
     lugar: '',
     estado: 'Planificado'
   });
@@ -33,6 +34,7 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
           rival_id: matchToEdit.rival_id,
           fecha: matchToEdit.fecha,
           tipo: matchToEdit.tipo,
+          condicion: matchToEdit.condicion || 'Local',
           lugar: matchToEdit.lugar || '',
           estado: matchToEdit.estado || 'Planificado'
         });
@@ -41,6 +43,7 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
           rival_id: '',
           fecha: new Date().toISOString().split('T')[0],
           tipo: 'Liga',
+          condicion: 'Local',
           lugar: '',
           estado: 'Planificado'
         });
@@ -83,6 +86,7 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
         rival_id: formData.rival_id,
         fecha: formData.fecha,
         tipo: formData.tipo,
+        condicion: formData.condicion,
         lugar: formData.lugar,
         estado: formData.estado
       };
@@ -173,35 +177,69 @@ export function MatchModal({ isOpen, onClose, onSuccess, matchToEdit }: MatchMod
           </div>
 
           {/* Tipo de Partido */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Tipo de Competición</label>
-            <div className="flex gap-4">
-              <label className="flex-1 cursor-pointer">
-                <input
-                  type="radio"
-                  name="tipo"
-                  value="Liga"
-                  checked={formData.tipo === 'Liga'}
-                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'Liga' | 'Amistoso' })}
-                  className="peer sr-only"
-                />
-                <div className="p-3 text-center rounded-xl border-2 border-neutral-200 dark:border-neutral-700 peer-checked:border-red-500 peer-checked:bg-red-50 dark:peer-checked:bg-red-500/10 peer-checked:text-red-700 dark:peer-checked:text-red-400 font-bold transition-all">
-                  Liga
-                </div>
-              </label>
-              <label className="flex-1 cursor-pointer">
-                <input
-                  type="radio"
-                  name="tipo"
-                  value="Amistoso"
-                  checked={formData.tipo === 'Amistoso'}
-                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'Liga' | 'Amistoso' })}
-                  className="peer sr-only"
-                />
-                <div className="p-3 text-center rounded-xl border-2 border-neutral-200 dark:border-neutral-700 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-500/10 peer-checked:text-blue-700 dark:peer-checked:text-blue-400 font-bold transition-all">
-                  Amistoso
-                </div>
-              </label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Competición</label>
+              <div className="flex gap-2">
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipo"
+                    value="Liga"
+                    checked={formData.tipo === 'Liga'}
+                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'Liga' | 'Amistoso' })}
+                    className="peer sr-only"
+                  />
+                  <div className="p-3 text-center rounded-xl border-2 border-neutral-200 dark:border-neutral-700 peer-checked:border-red-500 peer-checked:bg-red-50 dark:peer-checked:bg-red-500/10 peer-checked:text-red-700 dark:peer-checked:text-red-400 font-bold transition-all text-sm">
+                    Liga
+                  </div>
+                </label>
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="tipo"
+                    value="Amistoso"
+                    checked={formData.tipo === 'Amistoso'}
+                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'Liga' | 'Amistoso' })}
+                    className="peer sr-only"
+                  />
+                  <div className="p-3 text-center rounded-xl border-2 border-neutral-200 dark:border-neutral-700 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-500/10 peer-checked:text-blue-700 dark:peer-checked:text-blue-400 font-bold transition-all text-sm">
+                    Amistoso
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Condición</label>
+              <div className="flex gap-2">
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="condicion"
+                    value="Local"
+                    checked={formData.condicion === 'Local'}
+                    onChange={(e) => setFormData({ ...formData, condicion: e.target.value as 'Local' | 'Visitante' })}
+                    className="peer sr-only"
+                  />
+                  <div className="p-3 text-center rounded-xl border-2 border-neutral-200 dark:border-neutral-700 peer-checked:border-green-500 peer-checked:bg-green-50 dark:peer-checked:bg-green-500/10 peer-checked:text-green-700 dark:peer-checked:text-green-400 font-bold transition-all text-sm">
+                    Local
+                  </div>
+                </label>
+                <label className="flex-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="condicion"
+                    value="Visitante"
+                    checked={formData.condicion === 'Visitante'}
+                    onChange={(e) => setFormData({ ...formData, condicion: e.target.value as 'Local' | 'Visitante' })}
+                    className="peer sr-only"
+                  />
+                  <div className="p-3 text-center rounded-xl border-2 border-neutral-200 dark:border-neutral-700 peer-checked:border-purple-500 peer-checked:bg-purple-50 dark:peer-checked:bg-purple-500/10 peer-checked:text-purple-700 dark:peer-checked:text-purple-400 font-bold transition-all text-sm">
+                    Visitante
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 

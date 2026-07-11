@@ -14,11 +14,15 @@
     "@tailwindcss/vite": "^4.3.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.24.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-player": "^3.4.0",
     "react-router-dom": "^7.18.1",
+    "recharts": "^3.9.2",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {

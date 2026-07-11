@@ -63,6 +63,10 @@ export function PartidoDetalle() {
     day: 'numeric'
   });
 
+  const isLocal = match.condicion !== 'Visitante';
+  const localTeamLogo = '/logo.jpg';
+  const localTeamName = 'SÉNECA C.F.';
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 flex flex-col h-full">
       {/* Header Info */}
@@ -76,24 +80,38 @@ export function PartidoDetalle() {
           </Link>
           
           <div className="flex items-center gap-4 flex-1">
+            {/* Left Team */}
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md border-2 border-red-600 overflow-hidden">
-                <img src="/logo.jpg" alt="SÉNECA C.F." className="w-full h-full object-contain p-1" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="text-red-600 font-bold text-xl">S</span>'; }} />
-              </div>
-              <span className="font-black text-lg hidden sm:block">SÉNECA C.F.</span>
-            </div>
-            
-            <span className="text-neutral-400 font-bold px-2">VS</span>
-            
-            <div className="flex items-center gap-3">
-              {match.rival?.escudo_url ? (
+              {isLocal ? (
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md border-2 border-red-600 overflow-hidden">
+                  <img src={localTeamLogo} alt={localTeamName} className="w-full h-full object-contain p-1" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="text-red-600 font-bold text-xl">S</span>'; }} />
+                </div>
+              ) : match.rival?.escudo_url ? (
                 <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md border-2 border-white dark:border-neutral-800 overflow-hidden">
                   <img src={match.rival.escudo_url} alt={match.rival.nombre} className="w-full h-full object-contain p-1" />
                 </div>
               ) : (
                 <div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center shadow-md border-2 border-white dark:border-neutral-800" />
               )}
-              <span className="font-black text-lg truncate max-w-[150px] sm:max-w-none">{match.rival?.nombre || 'Rival'}</span>
+              <span className="font-black text-lg truncate max-w-[150px] sm:max-w-none">{isLocal ? localTeamName : (match.rival?.nombre || 'Rival')}</span>
+            </div>
+            
+            <span className="text-neutral-400 font-bold px-2">VS</span>
+            
+            {/* Right Team */}
+            <div className="flex items-center gap-3">
+              {!isLocal ? (
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md border-2 border-red-600 overflow-hidden">
+                  <img src={localTeamLogo} alt={localTeamName} className="w-full h-full object-contain p-1" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="text-red-600 font-bold text-xl">S</span>'; }} />
+                </div>
+              ) : match.rival?.escudo_url ? (
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md border-2 border-white dark:border-neutral-800 overflow-hidden">
+                  <img src={match.rival.escudo_url} alt={match.rival.nombre} className="w-full h-full object-contain p-1" />
+                </div>
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center shadow-md border-2 border-white dark:border-neutral-800" />
+              )}
+              <span className="font-black text-lg truncate max-w-[150px] sm:max-w-none">{!isLocal ? localTeamName : (match.rival?.nombre || 'Rival')}</span>
             </div>
           </div>
         </div>

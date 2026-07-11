@@ -1,4 +1,4 @@
-import { Calendar, MapPin, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, ChevronRight, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import type { Team } from './TeamCard';
@@ -8,6 +8,7 @@ export interface Match {
   rival_id: string;
   fecha: string;
   tipo: 'Liga' | 'Amistoso';
+  condicion?: 'Local' | 'Visitante';
   lugar: string;
   estado: string;
   rival?: Team;
@@ -17,10 +18,12 @@ interface MatchCardProps {
   match: Match;
   localTeamName?: string;
   localTeamLogo?: string;
+  onDelete?: (match: Match) => void;
 }
 
-export function MatchCard({ match, localTeamName = 'SÉNECA C.F.', localTeamLogo = '/logo.jpg' }: MatchCardProps) {
+export function MatchCard({ match, localTeamName = 'SÉNECA C.F.', localTeamLogo = '/logo.jpg', onDelete }: MatchCardProps) {
   const isLiga = match.tipo === 'Liga';
+  const isLocal = match.condicion !== 'Visitante';
 
   // Format date to locale string
   const formattedDate = new Date(match.fecha).toLocaleDateString('es-ES', {
@@ -48,17 +51,37 @@ export function MatchCard({ match, localTeamName = 'SÉNECA C.F.', localTeamLogo
         )}>
           {match.tipo.toUpperCase()}
         </span>
+
+        {onDelete && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelete(match);
+            }}
+            className="p-2 text-neutral-400 hover:text-red-600 bg-white/80 hover:bg-red-50 dark:bg-neutral-800/80 dark:hover:bg-red-900/30 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm backdrop-blur-sm"
+            title="Eliminar partido"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
 
       {/* Teams Vs */}
       <div className="flex items-center justify-between mb-8 relative z-10">
-        {/* Local Team */}
+        {/* Left Team */}
         <div className="flex flex-col items-center gap-2 flex-1">
           <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 border-4 border-white dark:border-neutral-900 shadow-md flex items-center justify-center overflow-hidden relative">
-            <img src={localTeamLogo} alt={localTeamName} className="w-full h-full object-contain p-1.5" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="font-black text-2xl text-red-600">S</span>'; }} />
+            {isLocal ? (
+              <img src={localTeamLogo} alt={localTeamName} className="w-full h-full object-contain p-1.5" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="font-black text-2xl text-red-600">S</span>'; }} />
+            ) : match.rival?.escudo_url ? (
+              <img src={match.rival.escudo_url} alt={match.rival.nombre} className="w-full h-full object-contain p-1.5" />
+            ) : (
+              <ShieldIcon />
+            )}
           </div>
           <span className="font-bold text-sm text-center text-neutral-900 dark:text-white line-clamp-2">
-            {localTeamName}
+            {isLocal ? localTeamName : (match.rival?.nombre || 'Rival Desconocido')}
           </span>
         </div>
 
@@ -67,17 +90,19 @@ export function MatchCard({ match, localTeamName = 'SÉNECA C.F.', localTeamLogo
           <span className="text-sm font-black text-neutral-300 dark:text-neutral-700">VS</span>
         </div>
 
-        {/* Away Team (Rival) */}
+        {/* Right Team */}
         <div className="flex flex-col items-center gap-2 flex-1">
           <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 border-4 border-white dark:border-neutral-900 shadow-md flex items-center justify-center overflow-hidden relative">
-            {match.rival?.escudo_url ? (
+            {!isLocal ? (
+              <img src={localTeamLogo} alt={localTeamName} className="w-full h-full object-contain p-1.5" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="font-black text-2xl text-red-600">S</span>'; }} />
+            ) : match.rival?.escudo_url ? (
               <img src={match.rival.escudo_url} alt={match.rival.nombre} className="w-full h-full object-contain p-1.5" />
             ) : (
               <ShieldIcon />
             )}
           </div>
           <span className="font-bold text-sm text-center text-neutral-900 dark:text-white line-clamp-2">
-            {match.rival?.nombre || 'Rival Desconocido'}
+            {!isLocal ? localTeamName : (match.rival?.nombre || 'Rival Desconocido')}
           </span>
         </div>
       </div>

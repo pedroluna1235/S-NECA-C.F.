@@ -40,6 +40,25 @@ export function Partidos() {
     setIsModalOpen(true);
   };
 
+  const handleDelete = async (match: Match) => {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar el partido contra ${match.rival?.nombre || 'este rival'}?`)) {
+      try {
+        const { error } = await supabase
+          .from('partidos')
+          .delete()
+          .eq('id', match.id);
+        
+        if (error) throw error;
+        
+        // Optimistic update
+        setMatches(matches.filter(m => m.id !== match.id));
+      } catch (error) {
+        console.error('Error deleting match:', error);
+        alert('Hubo un error al eliminar el partido');
+      }
+    }
+  };
+
   const filteredMatches = matches.filter(m => {
     const rivalName = m.rival?.nombre?.toLowerCase() || '';
     return rivalName.includes(searchTerm.toLowerCase());
@@ -91,7 +110,7 @@ export function Partidos() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredMatches.map((match, index) => (
             <div key={match.id} className="animate-in slide-in-from-bottom-4 fade-in" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
-              <MatchCard match={match} />
+              <MatchCard match={match} onDelete={handleDelete} />
             </div>
           ))}
         </div>

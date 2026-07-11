@@ -1,6 +1,6 @@
 import { cn } from '../lib/utils';
 import { differenceInYears } from 'date-fns';
-import { Edit2 } from 'lucide-react';
+import { Edit2, Eye } from 'lucide-react';
 
 export interface Player {
   id: string;
@@ -9,14 +9,20 @@ export interface Player {
   demarcacion: string;
   fecha_nacimiento: string | null;
   foto_url: string | null;
+  estadisticas_generales?: any;
+  stats_con_balon?: any;
+  stats_sin_balon?: any;
+  stats_fisico?: any;
+  video_url?: string | null;
 }
 
 interface PlayerCardProps {
   player: Player;
   onEdit?: (player: Player) => void;
+  onView?: (player: Player) => void;
 }
 
-export function PlayerCard({ player, onEdit }: PlayerCardProps) {
+export function PlayerCard({ player, onEdit, onView }: PlayerCardProps) {
   let age: string | number = 'N/A';
   
   if (player.fecha_nacimiento) {
@@ -30,24 +36,8 @@ export function PlayerCard({ player, onEdit }: PlayerCardProps) {
     }
   }
 
-  // Simular la forma con un número aleatorio entre 60 y 100 si no viene en los datos
-  const forma = Math.floor(Math.random() * 41) + 60; 
-  
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-      {/* Botón Editar (Hover) */}
-      {onEdit && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(player);
-          }}
-          className="absolute top-3 left-3 z-20 p-2 bg-white/90 dark:bg-black/70 hover:bg-white dark:hover:bg-black text-neutral-700 dark:text-neutral-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm backdrop-blur-sm"
-        >
-          <Edit2 size={16} />
-        </button>
-      )}
-
+    <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 pb-14">
       {/* Dorsal en la esquina superior */}
       {player.dorsal && (
         <div className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
@@ -73,31 +63,38 @@ export function PlayerCard({ player, onEdit }: PlayerCardProps) {
         )}
         
         {/* Gradiente en la parte inferior de la imagen */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />
       </div>
 
       {/* Información superpuesta */}
-      <div className="absolute bottom-0 w-full p-4 pt-12 flex flex-col gap-1">
+      <div className="absolute bottom-14 w-full p-4 pt-12 flex flex-col gap-1 pointer-events-none">
         <h3 className="font-bold text-xl text-white truncate drop-shadow-md">{player.nombre}</h3>
         <div className="flex justify-between items-center text-neutral-200 text-sm font-medium drop-shadow-md">
           <span>{player.demarcacion || 'Sin demarcación'}</span>
           <span>{age} años</span>
         </div>
-        
-        {/* Barra de Forma */}
-        <div className="mt-2 flex items-center gap-2">
-          <span className="text-xs font-bold text-white/90 drop-shadow-md">FORMA</span>
-          <div className="flex-1 h-2 bg-black/40 rounded-full overflow-hidden backdrop-blur-sm border border-white/10">
-            <div 
-              className={cn(
-                "h-full rounded-full transition-all duration-1000",
-                forma >= 80 ? "bg-green-500" : forma >= 70 ? "bg-yellow-500" : "bg-red-500"
-              )}
-              style={{ width: `${forma}%` }}
-            />
-          </div>
-          <span className="text-xs font-bold text-white drop-shadow-md">{forma}%</span>
-        </div>
+      </div>
+
+      {/* Botones de acción en la base (fuera de la imagen, con fondo blanco/negro del card) */}
+      <div className="absolute bottom-0 w-full h-14 bg-white dark:bg-neutral-900 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-center gap-3 px-4">
+        {onView && (
+          <button
+            onClick={() => onView(player)}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors text-sm font-semibold"
+          >
+            <Eye size={16} className="text-neutral-500" />
+            Ver
+          </button>
+        )}
+        {onEdit && (
+          <button
+            onClick={() => onEdit(player)}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border border-purple-200 dark:border-purple-900/50 text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors text-sm font-semibold"
+          >
+            <Edit2 size={16} />
+            Editar
+          </button>
+        )}
       </div>
     </div>
   );

@@ -3,13 +3,20 @@ import { Plus, RefreshCcw, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { PlayerCard, type Player } from '../components/PlayerCard';
 import { PlayerModal } from '../components/PlayerModal';
+import { PlayerDetailModal } from '../components/PlayerDetailModal';
 
 export function Plantilla() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modal de Edición/Creación
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [playerToEdit, setPlayerToEdit] = useState<Player | null>(null);
+
+  // Modal de Detalle (Radar)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [playerToView, setPlayerToView] = useState<Player | null>(null);
 
   const fetchPlayers = async () => {
     setLoading(true);
@@ -21,6 +28,10 @@ export function Plantilla() {
         
       if (error) throw error;
       setPlayers(data || []);
+      
+      // Actualizar la información en los modales si están abiertos
+      setPlayerToView(prev => prev ? (data?.find(p => p.id === prev.id) || prev) : null);
+      setPlayerToEdit(prev => prev ? (data?.find(p => p.id === prev.id) || prev) : null);
     } catch (error) {
       console.error('Error fetching players:', error);
     } finally {
@@ -35,6 +46,11 @@ export function Plantilla() {
   const handleEdit = (player: Player) => {
     setPlayerToEdit(player);
     setIsModalOpen(true);
+  };
+
+  const handleView = (player: Player) => {
+    setPlayerToView(player);
+    setIsDetailModalOpen(true);
   };
 
   const handleAdd = () => {
@@ -146,7 +162,7 @@ export function Plantilla() {
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                   {groupPlayers.map(player => (
-                    <PlayerCard key={player.id} player={player} onEdit={handleEdit} />
+                    <PlayerCard key={player.id} player={player} onEdit={handleEdit} onView={handleView} />
                   ))}
                 </div>
               </div>
@@ -161,6 +177,13 @@ export function Plantilla() {
         onClose={() => setIsModalOpen(false)} 
         onSuccess={fetchPlayers}
         playerToEdit={playerToEdit}
+      />
+
+      <PlayerDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        player={playerToView}
+        onSuccess={fetchPlayers}
       />
     </div>
   );
