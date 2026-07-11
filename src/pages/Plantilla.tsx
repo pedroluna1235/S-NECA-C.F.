@@ -56,7 +56,7 @@ export function Plantilla() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">Plantilla</h2>
           <p className="text-neutral-500 dark:text-neutral-400 mt-1">
-            Gestiona los jugadores del primer equipo
+            Gestiona los jugadores del Prebenjamín A
           </p>
         </div>
         
@@ -115,10 +115,43 @@ export function Plantilla() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {filteredPlayers.map(player => (
-            <PlayerCard key={player.id} player={player} onEdit={handleEdit} />
-          ))}
+        <div className="space-y-10">
+          {['Portero', 'Defensa', 'Centrocampista', 'Delantero'].map(position => {
+            const groupPlayers = filteredPlayers.filter(p => p.demarcacion === position);
+            
+            if (groupPlayers.length === 0) return null;
+
+            let badgeColor = 'bg-neutral-500';
+            let abbrev = position.substring(0, 3).toUpperCase();
+            let plural = position;
+
+            switch (position) {
+              case 'Portero': badgeColor = 'bg-purple-500 text-white'; abbrev = 'POR'; plural = 'Porteros'; break;
+              case 'Defensa': badgeColor = 'bg-blue-500 text-white'; abbrev = 'DEF'; plural = 'Defensas'; break;
+              case 'Centrocampista': badgeColor = 'bg-emerald-500 text-white'; abbrev = 'CEN'; plural = 'Centrocampistas'; break;
+              case 'Delantero': badgeColor = 'bg-red-500 text-white'; abbrev = 'DEL'; plural = 'Delanteros'; break;
+            }
+
+            return (
+              <div key={position} className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${badgeColor} shadow-sm`}>
+                    {abbrev}
+                  </span>
+                  <h3 className="text-xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                    {plural}
+                    <span className="text-neutral-400 dark:text-neutral-500 text-sm font-medium">({groupPlayers.length})</span>
+                  </h3>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  {groupPlayers.map(player => (
+                    <PlayerCard key={player.id} player={player} onEdit={handleEdit} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
