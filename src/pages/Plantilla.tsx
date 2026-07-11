@@ -9,6 +9,7 @@ export function Plantilla() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [playerToEdit, setPlayerToEdit] = useState<Player | null>(null);
 
   const fetchPlayers = async () => {
     setLoading(true);
@@ -31,10 +32,22 @@ export function Plantilla() {
     fetchPlayers();
   }, []);
 
-  const filteredPlayers = players.filter(p => 
-    p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.demarcacion.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleEdit = (player: Player) => {
+    setPlayerToEdit(player);
+    setIsModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setPlayerToEdit(null);
+    setIsModalOpen(true);
+  };
+
+  const filteredPlayers = players.filter(p => {
+    const nombreStr = p.nombre || '';
+    const demarcacionStr = p.demarcacion || '';
+    return nombreStr.toLowerCase().includes(searchTerm.toLowerCase()) || 
+           demarcacionStr.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -69,7 +82,7 @@ export function Plantilla() {
           </button>
           
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleAdd}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all shadow-md hover:shadow-lg active:scale-95"
           >
             <Plus size={18} />
@@ -95,7 +108,7 @@ export function Plantilla() {
             No se encontraron jugadores que coincidan con tu búsqueda o la plantilla está vacía.
           </p>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleAdd}
             className="text-red-600 hover:text-red-700 font-medium text-sm"
           >
             Añadir el primer jugador
@@ -104,7 +117,7 @@ export function Plantilla() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filteredPlayers.map(player => (
-            <PlayerCard key={player.id} player={player} />
+            <PlayerCard key={player.id} player={player} onEdit={handleEdit} />
           ))}
         </div>
       )}
@@ -114,6 +127,7 @@ export function Plantilla() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         onSuccess={fetchPlayers}
+        playerToEdit={playerToEdit}
       />
     </div>
   );

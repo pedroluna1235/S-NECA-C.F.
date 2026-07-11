@@ -1,15 +1,17 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, Upload, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
+import { type Player } from './PlayerCard';
 
 interface PlayerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  playerToEdit?: Player | null;
 }
 
-export function PlayerModal({ isOpen, onClose, onSuccess }: PlayerModalProps) {
+export function PlayerModal({ isOpen, onClose, onSuccess, playerToEdit }: PlayerModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -23,6 +25,28 @@ export function PlayerModal({ isOpen, onClose, onSuccess }: PlayerModalProps) {
   });
 
   const demarcaciones = ['Portero', 'Defensa', 'Centrocampista', 'Delantero'];
+
+  // Cargar datos si estamos editando
+  useEffect(() => {
+    if (isOpen && playerToEdit) {
+      setFormData({
+        nombre: playerToEdit.nombre,
+        dorsal: playerToEdit.dorsal ? playerToEdit.dorsal.toString() : '',
+        demarcacion: playerToEdit.demarcacion,
+        fecha_nacimiento: playerToEdit.fecha_nacimiento || '',
+      });
+      setPhotoPreview(playerToEdit.foto_url);
+    } else if (isOpen && !playerToEdit) {
+      // Limpiar si es nuevo
+      setFormData({
+        nombre: '',
+        dorsal: '',
+        demarcacion: 'Portero',
+        fecha_nacimiento: '',
+      });
+      setPhotoPreview(null);
+    }
+  }, [isOpen, playerToEdit]);
 
   if (!isOpen) return null;
 
@@ -40,15 +64,15 @@ export function PlayerModal({ isOpen, onClose, onSuccess }: PlayerModalProps) {
     setError(null);
 
     try {
-      let foto_url = null;
+      let foto_url = playerToEdit ? playerToEdit.foto_url : null;
       const file = fileInputRef.current?.files?.[0];
 
-      // 1. Subir foto si existe
+      // 1. Subir nueva foto si existe
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
         
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('FOTOS JUGADORES')
           .upload(fileName, file);
 
@@ -63,21 +87,28 @@ export function PlayerModal({ isOpen, onClose, onSuccess }: PlayerModalProps) {
         foto_url = publicUrlData.publicUrl;
       }
 
-      // 2. Crear registro en BD
-      const { error: insertError } = await supabase
-        .from('jugadores')
-        .insert([
-          {
-            nombre: formData.nombre,
-            dorsal: formData.dorsal ? parseInt(formData.dorsal) : null,
-            demarcacion: formData.demarcacion,
-            fecha_nacimiento: formData.fecha_nacimiento || null,
-            foto_url,
-          }
-        ]);
+      const playerData = {
+        nombre: formData.nombre,
+        dorsal: formData.dorsal ? parseInt(formData.dorsal) : null,
+        demarcacion: formData.demarcacion,
+        fecha_nacimiento: formData.fecha_nacimiento || null,
+        foto_url,
+      };
 
-      if (insertError) {
-        throw new Error(`Error al guardar jugador: ${insertError.message}`);
+      // 2. Crear o Actualizar registro en BD
+      if (playerToEdit) {
+        const { error: updateError } = await supabase
+          .from('jugadores')
+          .update(playerData)
+          .eq('id', playerToEdit.id);
+
+        if (updateError) throw new Error(`Error al actualizar jugador: ${updateError.message}`);
+      } else {
+        const { error: insertError } = await supabase
+          .from('jugadores')
+          .insert([playerData]);
+
+        if (insertError) throw new Error(`Error al guardar jugador: ${insertError.message}`);
       }
 
       onSuccess();
@@ -94,7 +125,9 @@ export function PlayerModal({ isOpen, onClose, onSuccess }: PlayerModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-800">
-          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">Añadir Jugador</h2>
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
+            {playerToEdit ? 'Editar Jugador' : 'Añadir Jugador'}
+          </h2>
           <button 
             onClick={onClose}
             className="p-2 rounded-full text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
@@ -116,14 +149,16 @@ export function PlayerModal({ isOpen, onClose, onSuccess }: PlayerModalProps) {
               className="relative w-32 h-40 rounded-xl border-2 border-dashed border-neutral-300 dark:border-neutral-700 overflow-hidden flex flex-col items-center justify-center cursor-pointer hover:border-red-500 hover:bg-red-50/50 dark:hover:bg-red-500/5 transition-colors group"
               onClick={() => fileInputRef.current?.click()}
             >
-              {photoPreview ? (
-                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
-              ) : (
-                <>
-                  <Upload className="w-8 h-8 text-neutral-400 group-hover:text-red-500 mb-2 transition-colors" />
-                  <span className="text-xs text-neutral-500 group-hover:text-red-600 font-medium text-center px-2">Subir Foto</span>
-                </>
-              )}
+              {/* Se renderizan ambos y se oculta con CSS para evitar que React pierda la referencia (bug típico con traductor de Google) */}
+              <img 
+                src={photoPreview || ''} 
+                alt="Preview" 
+                className={cn("w-full h-full object-cover absolute inset-0 z-10", !photoPreview && "hidden")}
+              />
+              <div className={cn("flex flex-col items-center justify-center w-full h-full relative z-0", photoPreview && "invisible")}>
+                <Upload className="w-8 h-8 text-neutral-400 group-hover:text-red-500 mb-2 transition-colors" />
+                <span className="text-xs text-neutral-500 group-hover:text-red-600 font-medium text-center px-2">Subir Foto</span>
+              </div>
             </div>
             <input 
               type="file" 
@@ -193,14 +228,13 @@ export function PlayerModal({ isOpen, onClose, onSuccess }: PlayerModalProps) {
                   : "bg-red-600 hover:bg-red-700 hover:shadow-lg active:scale-[0.98]"
               )}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="animate-spin" size={20} />
-                  Guardando...
-                </>
-              ) : (
-                'Añadir Jugador'
-              )}
+              <span className={cn("flex items-center gap-2", !isSubmitting && "hidden")}>
+                <Loader2 className="animate-spin" size={20} />
+                <span>Guardando...</span>
+              </span>
+              <span className={cn(isSubmitting && "hidden")}>
+                <span>{playerToEdit ? 'Guardar Cambios' : 'Añadir Jugador'}</span>
+              </span>
             </button>
           </div>
         </form>

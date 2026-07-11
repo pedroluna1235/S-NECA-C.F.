@@ -1,5 +1,6 @@
 import { cn } from '../lib/utils';
 import { differenceInYears } from 'date-fns';
+import { Edit2 } from 'lucide-react';
 
 export interface Player {
   id: string;
@@ -12,18 +13,41 @@ export interface Player {
 
 interface PlayerCardProps {
   player: Player;
+  onEdit?: (player: Player) => void;
 }
 
-export function PlayerCard({ player }: PlayerCardProps) {
-  const age = player.fecha_nacimiento 
-    ? differenceInYears(new Date(), new Date(player.fecha_nacimiento))
-    : 'N/A';
+export function PlayerCard({ player, onEdit }: PlayerCardProps) {
+  let age: string | number = 'N/A';
+  
+  if (player.fecha_nacimiento) {
+    const parsedDate = new Date(player.fecha_nacimiento);
+    if (!isNaN(parsedDate.getTime())) {
+      try {
+        age = differenceInYears(new Date(), parsedDate);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
 
   // Simular la forma con un número aleatorio entre 60 y 100 si no viene en los datos
   const forma = Math.floor(Math.random() * 41) + 60; 
   
   return (
     <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+      {/* Botón Editar (Hover) */}
+      {onEdit && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(player);
+          }}
+          className="absolute top-3 left-3 z-20 p-2 bg-white/90 dark:bg-black/70 hover:bg-white dark:hover:bg-black text-neutral-700 dark:text-neutral-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm backdrop-blur-sm"
+        >
+          <Edit2 size={16} />
+        </button>
+      )}
+
       {/* Dorsal en la esquina superior */}
       {player.dorsal && (
         <div className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-sm shadow-md">

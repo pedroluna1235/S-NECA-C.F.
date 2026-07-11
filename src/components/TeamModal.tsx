@@ -1,21 +1,34 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, Upload, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
+import { type Team } from './TeamCard';
 
 interface TeamModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  teamToEdit?: Team | null;
 }
 
-export function TeamModal({ isOpen, onClose, onSuccess }: TeamModalProps) {
+export function TeamModal({ isOpen, onClose, onSuccess, teamToEdit }: TeamModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [nombre, setNombre] = useState('');
+
+  // Cargar datos si estamos editando
+  useEffect(() => {
+    if (isOpen && teamToEdit) {
+      setNombre(teamToEdit.nombre);
+      setPhotoPreview(teamToEdit.escudo_url);
+    } else if (isOpen && !teamToEdit) {
+      setNombre('');
+      setPhotoPreview(null);
+    }
+  }, [isOpen, teamToEdit]);
 
   if (!isOpen) return null;
 
@@ -33,15 +46,15 @@ export function TeamModal({ isOpen, onClose, onSuccess }: TeamModalProps) {
     setError(null);
 
     try {
-      let escudo_url = null;
+      let escudo_url = teamToEdit ? teamToEdit.escudo_url : null;
       const file = fileInputRef.current?.files?.[0];
 
-      // 1. Subir escudo si existe
+      // 1. Subir nuevo escudo si existe
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
         
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('FOTOS ESCUDOS')
           .upload(fileName, file);
 
@@ -56,13 +69,22 @@ export function TeamModal({ isOpen, onClose, onSuccess }: TeamModalProps) {
         escudo_url = publicUrlData.publicUrl;
       }
 
-      // 2. Crear registro en BD
-      const { error: insertError } = await supabase
-        .from('equipos')
-        .insert([{ nombre, escudo_url }]);
+      const teamData = { nombre, escudo_url };
 
-      if (insertError) {
-        throw new Error(`Error al guardar equipo: ${insertError.message}`);
+      // 2. Crear o Actualizar registro en BD
+      if (teamToEdit) {
+        const { error: updateError } = await supabase
+          .from('equipos')
+          .update(teamData)
+          .eq('id', teamToEdit.id);
+
+        if (updateError) throw new Error(`Error al actualizar equipo: ${updateError.message}`);
+      } else {
+        const { error: insertError } = await supabase
+          .from('equipos')
+          .insert([teamData]);
+
+        if (insertError) throw new Error(`Error al guardar equipo: ${insertError.message}`);
       }
 
       onSuccess();
@@ -79,7 +101,9 @@ export function TeamModal({ isOpen, onClose, onSuccess }: TeamModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-800">
-          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">Añadir Equipo Rival</h2>
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
+            {teamToEdit ? 'Editar Equipo' : 'Añadir Equipo Rival'}
+          </h2>
           <button 
             onClick={onClose}
             className="p-2 rounded-full text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
@@ -101,14 +125,16 @@ export function TeamModal({ isOpen, onClose, onSuccess }: TeamModalProps) {
               className="relative w-32 h-32 rounded-full border-2 border-dashed border-neutral-300 dark:border-neutral-700 overflow-hidden flex flex-col items-center justify-center cursor-pointer hover:border-red-500 hover:bg-red-50/50 dark:hover:bg-red-500/5 transition-colors group"
               onClick={() => fileInputRef.current?.click()}
             >
-              {photoPreview ? (
-                <img src={photoPreview} alt="Preview" className="w-full h-full object-contain p-2" />
-              ) : (
-                <>
-                  <Upload className="w-8 h-8 text-neutral-400 group-hover:text-red-500 mb-1 transition-colors" />
-                  <span className="text-xs text-neutral-500 group-hover:text-red-600 font-medium text-center px-2">Subir Escudo</span>
-                </>
-              )}
+              {/* Renderizar ambos para evitar NotFoundError con traductor */}
+              <img 
+                src={photoPreview || ''} 
+                alt="Preview" 
+                className={cn("w-full h-full object-contain p-2 absolute inset-0 z-10", !photoPreview && "hidden")}
+              />
+              <div className={cn("flex flex-col items-center justify-center w-full h-full relative z-0", photoPreview && "invisible")}>
+                <Upload className="w-8 h-8 text-neutral-400 group-hover:text-red-500 mb-1 transition-colors" />
+                <span className="text-xs text-neutral-500 group-hover:text-red-600 font-medium text-center px-2">Subir Escudo</span>
+              </div>
             </div>
             <input 
               type="file" 
@@ -144,14 +170,13 @@ export function TeamModal({ isOpen, onClose, onSuccess }: TeamModalProps) {
                   : "bg-red-600 hover:bg-red-700 hover:shadow-lg active:scale-[0.98]"
               )}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="animate-spin" size={20} />
-                  Guardando...
-                </>
-              ) : (
-                'Añadir Equipo'
-              )}
+              <span className={cn("flex items-center gap-2", !isSubmitting && "hidden")}>
+                <Loader2 className="animate-spin" size={20} />
+                <span>Guardando...</span>
+              </span>
+              <span className={cn(isSubmitting && "hidden")}>
+                <span>{teamToEdit ? 'Guardar Cambios' : 'Añadir Equipo'}</span>
+              </span>
             </button>
           </div>
         </form>
