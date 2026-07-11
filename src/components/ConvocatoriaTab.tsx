@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Loader2, FileDown, Clock, MapPin, Shirt, Users, CheckCircle2, Circle, FileText } from 'lucide-react';
+import { Save, Loader2, FileDown, Clock, MapPin, Shirt, Users, CheckCircle2, FileText } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import { jsPDF } from 'jspdf';
