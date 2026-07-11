@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cn } from '../lib/utils';
 import { type Match } from './MatchCard';
+import { AnalisisRivalTab } from './AnalisisRivalTab';
 import { InformeRivalTab } from './InformeRivalTab';
 import { AlineacionTab } from './AlineacionTab';
 import { PlanPartidoTab } from './PlanPartidoTab';
@@ -12,7 +13,7 @@ interface MatchTabsProps {
   match: Match;
 }
 
-type TabId = 'informe' | 'alineacion' | 'plan' | 'abp' | 'convocatoria' | 'eventos';
+type TabId = 'analisis_rival' | 'informe' | 'alineacion' | 'plan' | 'abp' | 'convocatoria' | 'eventos';
 
 interface Tab {
   id: TabId;
@@ -20,6 +21,7 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
+  { id: 'analisis_rival', label: 'Análisis de rival' },
   { id: 'informe', label: 'Informe rival' },
   { id: 'alineacion', label: 'Alineación' },
   { id: 'plan', label: 'Plan de partido' },
@@ -29,7 +31,7 @@ const TABS: Tab[] = [
 ];
 
 export function MatchTabs({ match }: MatchTabsProps) {
-  const [activeTab, setActiveTab] = useState<TabId>('informe');
+  const [activeTab, setActiveTab] = useState<TabId>('analisis_rival');
 
   return (
     <div className="flex flex-col flex-1 h-full min-h-0 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-sm">
@@ -53,6 +55,8 @@ export function MatchTabs({ match }: MatchTabsProps) {
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-6">
+        {activeTab === 'analisis_rival' && <AnalisisRivalTab matchId={match.id} />}
+        
         {activeTab === 'informe' && <InformeRivalTab matchId={match.id} />}
         
         {activeTab === 'alineacion' && <AlineacionTab matchId={match.id} />}
