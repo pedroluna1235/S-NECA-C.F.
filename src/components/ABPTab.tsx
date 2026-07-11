@@ -114,8 +114,8 @@ export function ABPTab({ matchId }: ABPTabProps) {
     return <div className="flex justify-center py-10"><Loader2 className="animate-spin text-red-500" size={32} /></div>;
   }
 
-  const Corner = ({ index }: { index: number }) => (
-    <div className="flex flex-col space-y-4 bg-neutral-50 dark:bg-neutral-900/50 p-5 rounded-3xl border border-neutral-200 dark:border-neutral-800">
+  const renderCorner = (index: number) => (
+    <div key={index} className="flex flex-col space-y-4 bg-neutral-50 dark:bg-neutral-900/50 p-5 rounded-3xl border border-neutral-200 dark:border-neutral-800">
       <h4 className="font-black text-lg text-neutral-900 dark:text-white uppercase">CÓRNER {index}</h4>
       
       <ImageUploader 
@@ -188,7 +188,7 @@ export function ABPTab({ matchId }: ABPTabProps) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map(num => <Corner key={num} index={num} />)}
+        {[1, 2, 3, 4].map(num => renderCorner(num))}
       </div>
     </div>
   );

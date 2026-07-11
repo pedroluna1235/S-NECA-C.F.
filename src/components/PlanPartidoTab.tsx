@@ -115,8 +115,8 @@ export function PlanPartidoTab({ matchId }: PlanPartidoTabProps) {
     return <div className="flex justify-center py-10"><Loader2 className="animate-spin text-red-500" size={32} /></div>;
   }
 
-  const Column = ({ title, fase, icon }: { title: string, fase: Fases, icon: React.ReactNode }) => (
-    <div className="flex flex-col space-y-4 bg-neutral-50 dark:bg-neutral-900/50 p-5 rounded-3xl border border-neutral-200 dark:border-neutral-800">
+  const renderColumn = (title: string, fase: Fases, icon: React.ReactNode) => (
+    <div key={fase} className="flex flex-col space-y-4 bg-neutral-50 dark:bg-neutral-900/50 p-5 rounded-3xl border border-neutral-200 dark:border-neutral-800">
       <div className="flex items-center gap-2 mb-2">
         <div className="p-2 bg-white dark:bg-neutral-800 rounded-xl shadow-sm text-red-500">
           {icon}
@@ -203,9 +203,9 @@ export function PlanPartidoTab({ matchId }: PlanPartidoTabProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-12 sm:pt-0">
-        <Column title="Ataque" fase="ataque" icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="12" cy="12" r="10"/><path d="M12 12l4-4M12 12l-4 4M12 12l4 4M12 12l-4-4"/></svg>} />
-        <Column title="Defensa" fase="defensa" icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>} />
-        <Column title="Transiciones" fase="transiciones" icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>} />
+        {renderColumn("Ataque", "ataque", <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="12" cy="12" r="10"/><path d="M12 12l4-4M12 12l-4 4M12 12l4 4M12 12l-4-4"/></svg>)}
+        {renderColumn("Defensa", "defensa", <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>)}
+        {renderColumn("Transiciones", "transiciones", <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>)}
       </div>
 
       <div className="sm:hidden fixed bottom-6 left-6 right-6 z-20">
