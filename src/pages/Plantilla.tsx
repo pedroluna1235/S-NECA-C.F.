@@ -4,8 +4,10 @@ import { supabase } from '../lib/supabase';
 import { PlayerCard, type Player } from '../components/PlayerCard';
 import { PlayerModal } from '../components/PlayerModal';
 import { PlayerDetailModal } from '../components/PlayerDetailModal';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Plantilla() {
+  const { role } = useAuth();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,6 +46,7 @@ export function Plantilla() {
   }, []);
 
   const handleEdit = (player: Player) => {
+    if (role === 'lector') return;
     setPlayerToEdit(player);
     setIsModalOpen(true);
   };
@@ -54,6 +57,7 @@ export function Plantilla() {
   };
 
   const handleAdd = () => {
+    if (role === 'lector') return;
     setPlayerToEdit(null);
     setIsModalOpen(true);
   };
@@ -99,7 +103,12 @@ export function Plantilla() {
           
           <button 
             onClick={handleAdd}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-all shadow-md hover:shadow-lg active:scale-95"
+            disabled={role === 'lector'}
+            className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl font-medium transition-all shadow-md ${
+              role === 'lector' 
+                ? 'bg-red-600 opacity-50 cursor-not-allowed pointer-events-none' 
+                : 'bg-red-600 hover:bg-red-700 hover:shadow-lg active:scale-95'
+            }`}
           >
             <Plus size={18} />
             <span className="hidden sm:inline">Añadir Jugador</span>

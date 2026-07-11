@@ -1,11 +1,14 @@
-import { NavLink } from 'react-router-dom';
-import { Users, Shield, CalendarDays, Menu, X, Sun, Moon, BookOpen, Eye } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Users, Shield, CalendarDays, Menu, X, Sun, Moon, BookOpen, Eye, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const { logout, role } = useAuth();
+  const navigate = useNavigate();
 
   // Inicializar tema
   useEffect(() => {
@@ -17,6 +20,11 @@ export function Sidebar() {
   const toggleTheme = () => {
     document.documentElement.classList.toggle('dark');
     setIsDark(!isDark);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   const navItems = [
@@ -59,7 +67,7 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="font-bold text-xl tracking-tight text-neutral-900 dark:text-white">SÉNECA C.F.</h1>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">Panel de Gestión</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-medium capitalize">Modo {role}</p>
           </div>
         </div>
 
@@ -84,13 +92,21 @@ export function Sidebar() {
         </nav>
 
         {/* Footer / Settings */}
-        <div className="p-4 border-t border-neutral-200 dark:border-neutral-800">
+        <div className="p-4 border-t border-neutral-200 dark:border-neutral-800 space-y-2">
           <button
             onClick={toggleTheme}
             className="flex items-center justify-between w-full px-4 py-3 rounded-xl text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-900 transition-colors"
           >
             <span className="font-medium">Modo {isDark ? 'Claro' : 'Oscuro'}</span>
             {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          
+          <button
+            onClick={handleLogout}
+            className="flex items-center justify-between w-full px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:text-red-500 dark:hover:bg-red-500/10 transition-colors mt-2"
+          >
+            <span className="font-medium">Cerrar Sesión</span>
+            <LogOut size={20} />
           </button>
         </div>
       </aside>
