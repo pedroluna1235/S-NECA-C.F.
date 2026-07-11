@@ -3,6 +3,9 @@ import { cn } from '../lib/utils';
 import { type Match } from './MatchCard';
 import { InformeRivalTab } from './InformeRivalTab';
 import { AlineacionTab } from './AlineacionTab';
+import { PlanPartidoTab } from './PlanPartidoTab';
+import { ABPTab } from './ABPTab';
+import { EventosTab } from './EventosTab';
 
 interface MatchTabsProps {
   match: Match;
@@ -50,25 +53,13 @@ export function MatchTabs({ match }: MatchTabsProps) {
       <div className="flex-1 overflow-y-auto p-6">
         {activeTab === 'informe' && <InformeRivalTab matchId={match.id} />}
         
-        {activeTab === 'alineacion' && <AlineacionTab />}
+        {activeTab === 'alineacion' && <AlineacionTab matchId={match.id} />}
         
-        {activeTab === 'plan' && (
-          <div className="flex items-center justify-center h-64 text-neutral-500 font-medium border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50">
-            Plan de partido - Próximamente
-          </div>
-        )}
+        {activeTab === 'plan' && <PlanPartidoTab matchId={match.id} />}
         
-        {activeTab === 'abp' && (
-          <div className="flex items-center justify-center h-64 text-neutral-500 font-medium border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50">
-            Acciones a Balón Parado - Próximamente
-          </div>
-        )}
+        {activeTab === 'abp' && <ABPTab matchId={match.id} />}
         
-        {activeTab === 'eventos' && (
-          <div className="flex items-center justify-center h-64 text-neutral-500 font-medium border-2 border-dashed border-neutral-200 dark:border-neutral-800 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50">
-            Eventos - Próximamente
-          </div>
-        )}
+        {activeTab === 'eventos' && <EventosTab matchId={match.id} />}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Loader2, BrainCircuit, User, X } from 'lucide-react';
+import { Loader2, BrainCircuit, User, X, Save, CheckCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface Jugador {
@@ -59,7 +59,7 @@ const SISTEMAS: Record<Sistema, PositionDef[]> = {
   ],
 };
 
-export function AlineacionTab() {
+export function AlineacionTab({ matchId }: { matchId?: string }) {
   const [jugadores, setJugadores] = useState<Jugador[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -75,13 +75,29 @@ export function AlineacionTab() {
   const [isAnalyzingJugador, setIsAnalyzingJugador] = useState(false);
   const [analisisPlayer, setAnalisisPlayer] = useState<{conBalon: string[], sinBalon: string[], duelos: string[]} | null>(null);
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSavedToast, setShowSavedToast] = useState(false);
+
   // Drag and drop state
   const [draggedPlayerId, setDraggedPlayerId] = useState<string | null>(null);
   const [dragSource, setDragSource] = useState<string | null>(null); // 'bench' or position id
 
   useEffect(() => {
     fetchJugadores();
-  }, []);
+    if (matchId) {
+      const savedData = localStorage.getItem(`alineacion_${matchId}`);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          if (parsed.sistema) setSistema(parsed.sistema);
+          if (parsed.sistemaRival) setSistemaRival(parsed.sistemaRival);
+          if (parsed.alineacion) setAlineacion(parsed.alineacion);
+        } catch (e) {
+          console.error('Error parsing saved lineup', e);
+        }
+      }
+    }
+  }, [matchId]);
 
   const fetchJugadores = async () => {
     try {
@@ -197,6 +213,19 @@ export function AlineacionTab() {
     }, 1500);
   };
 
+  const handleSave = () => {
+    if (!matchId) return;
+    setIsSaving(true);
+    // Simulate slight delay for UX
+    setTimeout(() => {
+      const dataToSave = { sistema, sistemaRival, alineacion };
+      localStorage.setItem(`alineacion_${matchId}`, JSON.stringify(dataToSave));
+      setIsSaving(false);
+      setShowSavedToast(true);
+      setTimeout(() => setShowSavedToast(false), 3000);
+    }, 600);
+  };
+
   const getJugadoresBanquillo = () => {
     const onPitchIds = Object.values(alineacion).filter(Boolean).map(j => j!.id);
     return jugadores.filter(j => !onPitchIds.includes(j.id));
@@ -263,16 +292,29 @@ export function AlineacionTab() {
             </div>
           </div>
 
-          <button
-            onClick={analizarIA}
-            disabled={isAnalyzing}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-md transition-all hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed mt-2 sm:mt-0"
-          >
-            <span className="flex items-center justify-center w-[18px] h-[18px]">
-              {isAnalyzing ? <Loader2 size={18} className="animate-spin" /> : <BrainCircuit size={18} />}
-            </span>
-            <span>Analizar IA</span>
-          </button>
+          <div className="flex items-center gap-3 mt-2 sm:mt-0">
+            {matchId && (
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 font-bold rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                Guardar
+              </button>
+            )}
+
+            <button
+              onClick={analizarIA}
+              disabled={isAnalyzing}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-md transition-all hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              <span className="flex items-center justify-center w-[18px] h-[18px]">
+                {isAnalyzing ? <Loader2 size={18} className="animate-spin" /> : <BrainCircuit size={18} />}
+              </span>
+              <span>Analizar IA</span>
+            </button>
+          </div>
         </div>
 
         {/* Pitch Area */}
@@ -502,6 +544,14 @@ export function AlineacionTab() {
         </div>
 
       </div>
+
+      {/* Toast Notification */}
+      {showSavedToast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 bg-neutral-900 text-white rounded-xl shadow-xl animate-in slide-in-from-bottom-5 fade-in">
+          <CheckCircle size={20} className="text-green-400" />
+          <span className="font-bold text-sm">Alineación guardada correctamente</span>
+        </div>
+      )}
     </div>
   );
 }
