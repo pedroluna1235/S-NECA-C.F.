@@ -4,6 +4,7 @@ import { Plantilla } from './pages/Plantilla';
 import { Equipos } from './pages/Equipos';
 import { Partidos } from './pages/Partidos';
 import { PartidoDetalle } from './pages/PartidoDetalle';
+import { Sesiones } from './pages/Sesiones';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="equipos" element={<Equipos />} />
           <Route path="partidos" element={<Partidos />} />
           <Route path="partidos/:id" element={<PartidoDetalle />} />
+          <Route path="sesiones" element={<Sesiones />} />
         </Route>
       </Routes>
     </BrowserRouter>
