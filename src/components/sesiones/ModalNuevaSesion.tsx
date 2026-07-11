@@ -10,6 +10,7 @@ interface ModalNuevaSesionProps {
 
 export function ModalNuevaSesion({ fecha, onClose, onSuccess }: ModalNuevaSesionProps) {
   const [titulo, setTitulo] = useState('');
+  const [observaciones, setObservaciones] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -64,7 +65,8 @@ export function ModalNuevaSesion({ fecha, onClose, onSuccess }: ModalNuevaSesion
           {
             fecha: fechaLocalString,
             titulo: titulo.trim(),
-            pdf_url: publicUrl
+            pdf_url: publicUrl,
+            observaciones: observaciones.trim() || null
           }
         ]);
 
@@ -121,6 +123,19 @@ export function ModalNuevaSesion({ fecha, onClose, onSuccess }: ModalNuevaSesion
               placeholder="Ej: Entrenamiento Táctico Defensivo"
               className="w-full px-4 py-2.5 bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-neutral-900 dark:text-white transition-shadow"
               required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+              Observaciones (Opcional)
+            </label>
+            <textarea
+              value={observaciones}
+              onChange={(e) => setObservaciones(e.target.value)}
+              placeholder="Ej: Incidencias, jugadores destacados, notas..."
+              rows={3}
+              className="w-full px-4 py-2.5 bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-neutral-900 dark:text-white transition-shadow resize-none"
             />
           </div>
 

@@ -22,6 +22,7 @@ export function PlayerModal({ isOpen, onClose, onSuccess, playerToEdit }: Player
     dorsal: '',
     demarcacion: 'Portero',
     fecha_nacimiento: '',
+    lateralidad: 'Diestro',
   });
 
   const demarcaciones = ['Portero', 'Defensa', 'Centrocampista', 'Delantero'];
@@ -34,6 +35,7 @@ export function PlayerModal({ isOpen, onClose, onSuccess, playerToEdit }: Player
         dorsal: playerToEdit.dorsal ? playerToEdit.dorsal.toString() : '',
         demarcacion: playerToEdit.demarcacion,
         fecha_nacimiento: playerToEdit.fecha_nacimiento || '',
+        lateralidad: playerToEdit.lateralidad || 'Diestro',
       });
       setPhotoPreview(playerToEdit.foto_url);
     } else if (isOpen && !playerToEdit) {
@@ -43,6 +45,7 @@ export function PlayerModal({ isOpen, onClose, onSuccess, playerToEdit }: Player
         dorsal: '',
         demarcacion: 'Portero',
         fecha_nacimiento: '',
+        lateralidad: 'Diestro',
       });
       setPhotoPreview(null);
     }
@@ -92,6 +95,7 @@ export function PlayerModal({ isOpen, onClose, onSuccess, playerToEdit }: Player
         dorsal: formData.dorsal ? parseInt(formData.dorsal) : null,
         demarcacion: formData.demarcacion,
         fecha_nacimiento: formData.fecha_nacimiento || null,
+        lateralidad: formData.lateralidad,
         foto_url,
       };
 
@@ -206,14 +210,28 @@ export function PlayerModal({ isOpen, onClose, onSuccess, playerToEdit }: Player
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-300">Fecha de Nacimiento</label>
-              <input 
-                type="date" 
-                className="w-full px-4 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
-                value={formData.fecha_nacimiento}
-                onChange={e => setFormData({...formData, fecha_nacimiento: e.target.value})}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-300">Fecha de Nacimiento</label>
+                <input 
+                  type="date" 
+                  className="w-full px-4 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                  value={formData.fecha_nacimiento}
+                  onChange={e => setFormData({...formData, fecha_nacimiento: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-300">Lateralidad</label>
+                <select 
+                  className="w-full px-4 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all appearance-none"
+                  value={formData.lateralidad}
+                  onChange={e => setFormData({...formData, lateralidad: e.target.value})}
+                >
+                  <option value="Diestro">Diestro</option>
+                  <option value="Zurdo">Zurdo</option>
+                  <option value="Ambidiestro">Ambidiestro</option>
+                </select>
+              </div>
             </div>
           </div>
 

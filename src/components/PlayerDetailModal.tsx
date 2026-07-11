@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Save, Loader2, PlayCircle, FileText } from 'lucide-react';
+import { X, Save, Loader2, PlayCircle, FileText, Plus, Minus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 import { type Player } from './PlayerCard';
@@ -248,44 +248,65 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
                   <p className="font-bold text-neutral-900 dark:text-white">{age} años</p>
                 </div>
               </div>
-              <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl flex items-center gap-3 border border-neutral-100 dark:border-neutral-800 col-span-2">
+              <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl flex items-center gap-3 border border-neutral-100 dark:border-neutral-800">
                 <div className="w-10 h-10 rounded-full bg-white dark:bg-neutral-700 flex items-center justify-center shadow-sm">
                   <span className="text-neutral-500 font-bold text-sm">NAC</span>
                 </div>
                 <div>
                   <p className="text-xs text-neutral-500 font-medium uppercase">F. Nacimiento</p>
-                  <p className="font-bold text-neutral-900 dark:text-white">{player.fecha_nacimiento || 'No especificada'}</p>
+                  <p className="font-bold text-neutral-900 dark:text-white">{player.fecha_nacimiento || 'N/A'}</p>
+                </div>
+              </div>
+              <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl flex items-center gap-3 border border-neutral-100 dark:border-neutral-800">
+                <div className="w-10 h-10 rounded-full bg-white dark:bg-neutral-700 flex items-center justify-center shadow-sm">
+                  <span className="text-neutral-500 font-bold text-sm">LAT</span>
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-500 font-medium uppercase">Lateralidad</p>
+                  <p className="font-bold text-neutral-900 dark:text-white">{player.lateralidad || 'No def.'}</p>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl text-center border border-neutral-100 dark:border-neutral-800">
-                <input 
-                  type="number" 
-                  className="text-2xl font-black text-neutral-900 dark:text-white bg-transparent w-full text-center focus:outline-none" 
-                  value={statsGen.partidos}
-                  onChange={e => setStatsGen({...statsGen, partidos: parseInt(e.target.value) || 0})}
-                />
-                <p className="text-xs text-neutral-500 font-bold uppercase mt-1">Partidos</p>
+                <div className="flex items-center justify-center gap-1">
+                  <button onClick={() => setStatsGen({...statsGen, partidos: Math.max(0, statsGen.partidos - 1)})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-neutral-700 shadow-sm text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Minus size={14}/></button>
+                  <input 
+                    type="number" 
+                    className="text-2xl font-black text-neutral-900 dark:text-white bg-transparent w-16 text-center focus:outline-none focus:bg-white dark:focus:bg-neutral-800 rounded-lg transition-colors" 
+                    value={statsGen.partidos}
+                    onChange={e => setStatsGen({...statsGen, partidos: parseInt(e.target.value) || 0})}
+                  />
+                  <button onClick={() => setStatsGen({...statsGen, partidos: statsGen.partidos + 1})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-neutral-700 shadow-sm text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Plus size={14}/></button>
+                </div>
+                <p className="text-xs text-neutral-500 font-bold uppercase mt-2">Partidos</p>
               </div>
               <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl text-center border border-neutral-100 dark:border-neutral-800">
-                <input 
-                  type="number" 
-                  className="text-2xl font-black text-neutral-900 dark:text-white bg-transparent w-full text-center focus:outline-none" 
-                  value={statsGen.titular}
-                  onChange={e => setStatsGen({...statsGen, titular: parseInt(e.target.value) || 0})}
-                />
-                <p className="text-xs text-neutral-500 font-bold uppercase mt-1">Titular</p>
+                <div className="flex items-center justify-center gap-1">
+                  <button onClick={() => setStatsGen({...statsGen, titular: Math.max(0, statsGen.titular - 1)})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-neutral-700 shadow-sm text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Minus size={14}/></button>
+                  <input 
+                    type="number" 
+                    className="text-2xl font-black text-neutral-900 dark:text-white bg-transparent w-16 text-center focus:outline-none focus:bg-white dark:focus:bg-neutral-800 rounded-lg transition-colors" 
+                    value={statsGen.titular}
+                    onChange={e => setStatsGen({...statsGen, titular: parseInt(e.target.value) || 0})}
+                  />
+                  <button onClick={() => setStatsGen({...statsGen, titular: statsGen.titular + 1})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-neutral-700 shadow-sm text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Plus size={14}/></button>
+                </div>
+                <p className="text-xs text-neutral-500 font-bold uppercase mt-2">Titular</p>
               </div>
-              <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl text-center border border-green-200 dark:border-green-800/50">
-                <input 
-                  type="number" 
-                  className="text-2xl font-black text-green-700 dark:text-green-400 bg-transparent w-full text-center focus:outline-none" 
-                  value={statsGen.goles}
-                  onChange={e => setStatsGen({...statsGen, goles: parseInt(e.target.value) || 0})}
-                />
-                <p className="text-xs text-green-600 dark:text-green-500 font-bold uppercase mt-1">Goles</p>
+              <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-2xl text-center border border-green-200 dark:border-green-800/50">
+                <div className="flex items-center justify-center gap-1">
+                  <button onClick={() => setStatsGen({...statsGen, goles: Math.max(0, statsGen.goles - 1)})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-green-900/50 shadow-sm text-green-600 hover:text-green-700 hover:bg-green-100 transition-colors"><Minus size={14}/></button>
+                  <input 
+                    type="number" 
+                    className="text-2xl font-black text-green-700 dark:text-green-500 bg-transparent w-16 text-center focus:outline-none focus:bg-white dark:focus:bg-green-900/50 rounded-lg transition-colors" 
+                    value={statsGen.goles}
+                    onChange={e => setStatsGen({...statsGen, goles: parseInt(e.target.value) || 0})}
+                  />
+                  <button onClick={() => setStatsGen({...statsGen, goles: statsGen.goles + 1})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-green-900/50 shadow-sm text-green-600 hover:text-green-700 hover:bg-green-100 transition-colors"><Plus size={14}/></button>
+                </div>
+                <p className="text-xs text-green-600 dark:text-green-500 font-bold uppercase mt-2">Goles</p>
               </div>
             </div>
 

@@ -5,6 +5,7 @@ import { Equipos } from './pages/Equipos';
 import { Partidos } from './pages/Partidos';
 import { PartidoDetalle } from './pages/PartidoDetalle';
 import { Sesiones } from './pages/Sesiones';
+import { Scouting } from './pages/Scouting';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="partidos" element={<Partidos />} />
           <Route path="partidos/:id" element={<PartidoDetalle />} />
           <Route path="sesiones" element={<Sesiones />} />
+          <Route path="scouting" element={<Scouting />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, ExternalLink, FileText, CalendarDays } from 'lucide-react';
+import { Trash2, ExternalLink, FileText, CalendarDays, Edit2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { ModalEditarObservaciones } from './ModalEditarObservaciones';
 import type { Sesion } from '../../pages/Sesiones';
 
 interface HistorialSesionesProps {
@@ -10,6 +12,7 @@ interface HistorialSesionesProps {
 }
 
 export function HistorialSesiones({ sesiones, onSesionDeleted }: HistorialSesionesProps) {
+  const [editingSesion, setEditingSesion] = useState<Sesion | null>(null);
   
   const handleDelete = async (id: string, pdfUrl: string) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta sesión? Esta acción no se puede deshacer.')) {
@@ -62,10 +65,11 @@ export function HistorialSesiones({ sesiones, onSesionDeleted }: HistorialSesion
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {sesiones.map((sesion, index) => {
-        // Calculamos el número de sesión de forma visual si no está en la base de datos correctamente, 
-        // pero preferimos el de la BD. Si se ordena por fecha descendente, el índice invertido puede servir.
-        // Asumiremos que sesiones viene ordenado descendente.
-        const numSesion = sesion.numero_sesion || (sesiones.length - index);
+        // Calculamos el número de sesión de forma visual e independiente de la BD,
+        // para que al eliminar sesiones antiguas, la numeración se reorganice sin saltos.
+        // Como están ordenadas de más reciente a más antigua (descendente),
+        // la más antigua tiene el índice sesiones.length - 1, que será la #1.
+        const numSesion = sesiones.length - index;
         const fechaFormat = format(parseISO(sesion.fecha), "dd 'de' MMMM, yyyy", { locale: es });
 
         return (
@@ -77,24 +81,39 @@ export function HistorialSesiones({ sesiones, onSesionDeleted }: HistorialSesion
               <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                 Sesión #{numSesion}
               </span>
-              <button
-                onClick={() => handleDelete(sesion.id, sesion.pdf_url)}
-                className="text-neutral-400 hover:text-red-600 dark:hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-1"
-                title="Eliminar sesión"
-              >
-                <Trash2 size={18} />
-              </button>
+              <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => setEditingSesion(sesion)}
+                  className="text-neutral-400 hover:text-blue-600 dark:hover:text-blue-500 p-2 transition-colors"
+                  title="Editar observaciones"
+                >
+                  <Edit2 size={18} />
+                </button>
+                <button
+                  onClick={() => handleDelete(sesion.id, sesion.pdf_url)}
+                  className="text-neutral-400 hover:text-red-600 dark:hover:text-red-500 p-2 transition-colors"
+                  title="Eliminar sesión"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
             </div>
 
             <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-2 line-clamp-2 flex-1">
               {sesion.titulo}
             </h3>
 
-            <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 mb-6">
+            <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 mb-4">
               <CalendarDays size={16} />
               <span className="capitalize">{fechaFormat}</span>
             </div>
 
+            {sesion.observaciones && (
+              <div className="mb-6 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm text-neutral-600 dark:text-neutral-400 italic flex-1 overflow-y-auto">
+                {sesion.observaciones}
+              </div>
+            )}
+            
             <a
               href={sesion.pdf_url}
               target="_blank"
@@ -108,6 +127,17 @@ export function HistorialSesiones({ sesiones, onSesionDeleted }: HistorialSesion
           </div>
         );
       })}
+      
+      {editingSesion && (
+        <ModalEditarObservaciones
+          sesion={editingSesion}
+          onClose={() => setEditingSesion(null)}
+          onSuccess={() => {
+            setEditingSesion(null);
+            onSesionDeleted(); // Reutilizamos el callback para recargar la lista
+          }}
+        />
+      )}
     </div>
   );
 }

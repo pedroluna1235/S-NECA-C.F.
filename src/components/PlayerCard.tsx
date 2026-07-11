@@ -8,6 +8,7 @@ export interface Player {
   dorsal: number | null;
   demarcacion: string;
   fecha_nacimiento: string | null;
+  lateralidad?: string | null;
   foto_url: string | null;
   estadisticas_generales?: any;
   stats_con_balon?: any;

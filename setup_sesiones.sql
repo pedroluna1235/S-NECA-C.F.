@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS sesiones (
   fecha date NOT NULL,
   titulo text NOT NULL,
   pdf_url text NOT NULL,
+  observaciones text,
   created_at timestamp with time zone DEFAULT now()
 );
 

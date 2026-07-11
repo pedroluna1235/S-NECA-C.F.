@@ -10,6 +10,7 @@ export type Sesion = {
   fecha: string;
   titulo: string;
   pdf_url: string;
+  observaciones?: string;
   created_at: string;
 };
 
