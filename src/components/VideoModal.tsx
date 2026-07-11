@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Video, Save, Trash2, Loader2 } from 'lucide-react';
+import { X, Video, Save, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 import { type Player } from './PlayerCard';

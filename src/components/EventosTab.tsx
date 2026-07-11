@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Download, Loader2, Play, Pause, AlertCircle, FileJson } from 'lucide-react';
+import { Download, Loader2, Play, AlertCircle, FileJson } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import ReactPlayer from 'react-player';
@@ -30,7 +30,7 @@ export function EventosTab({ matchId }: EventosTabProps) {
   const [eventos, setEventos] = useState<EventoData[]>([]);
   const [videoUrl, setVideoUrl] = useState('');
   
-  const playerRef = useRef<ReactPlayer>(null);
+  const playerRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchEventos = async () => {

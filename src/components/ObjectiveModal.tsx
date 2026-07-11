@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Target, Save, Loader2, Plus, Calendar, Activity, CheckCircle2, ChevronLeft, Trash2, FileText, Image as ImageIcon, Video, ExternalLink, Pencil, MessageSquare, ChevronDown, ChevronUp, XCircle, Send } from 'lucide-react';
+import { X, Target, Save, Loader2, Plus, Calendar, Activity, CheckCircle2, ChevronLeft, Trash2, FileText, Image as ImageIcon, Video, Pencil, MessageSquare, ChevronDown, ChevronUp, XCircle, Send } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 import { type Player } from './PlayerCard';
@@ -36,7 +36,7 @@ interface Objetivo {
   created_at: string;
 }
 
-export function ObjectiveModal({ isOpen, onClose, player, onSuccess }: ObjectiveModalProps) {
+export function ObjectiveModal({ isOpen, onClose, player }: ObjectiveModalProps) {
   const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
   const [seguimientos, setSeguimientos] = useState<Seguimiento[]>([]);
   const [isLoading, setIsLoading] = useState(false);

@@ -1,4 +1,3 @@
-import { cn } from '../lib/utils';
 import { differenceInYears } from 'date-fns';
 import { Edit2, Eye } from 'lucide-react';
 
