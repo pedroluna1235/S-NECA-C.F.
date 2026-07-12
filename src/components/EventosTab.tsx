@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Download, Loader2, Play, AlertCircle, FileJson } from 'lucide-react';
+import { Download, Loader2, Play, AlertCircle, FileJson, Film } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import ReactPlayer from 'react-player';
@@ -29,6 +29,7 @@ export function EventosTab({ matchId }: EventosTabProps) {
   const [loading, setLoading] = useState(true);
   const [eventos, setEventos] = useState<EventoData[]>([]);
   const [videoUrl, setVideoUrl] = useState('');
+  const [playingCutEnd, setPlayingCutEnd] = useState<number | null>(null);
   
   const playerRef = useRef<any>(null);
 
@@ -160,10 +161,53 @@ export function EventosTab({ matchId }: EventosTabProps) {
     document.body.removeChild(link);
   };
 
+  const exportFCPXML = () => {
+    let clipsXML = '';
+    let currentOffset = 0;
+
+    eventos.forEach((e) => {
+      const start = Math.max(0, e.tiempo_segundos - 5);
+      const duration = 15;
+      clipsXML += `
+                        <clip name="${e.tipo} - ${e.descripcion.replace(/&/g, '&amp;').replace(/</g, '&lt;')}" ref="r2" offset="${currentOffset}s" duration="${duration}s" start="${start}s"/>`;
+      currentOffset += duration;
+    });
+
+    const fcpxml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.8">
+    <resources>
+        <format id="r1" name="FFVideoFormat1080p25" frameDuration="1/25s" width="1920" height="1080"/>
+        <asset id="r2" name="Video Partido" src="file:///RUTA_DEL_VIDEO_DESCARGADO.mp4" start="0s" hasVideo="1" format="r1" hasAudio="1"/>
+    </resources>
+    <library>
+        <event name="Analisis Seneca">
+            <project name="Cortes Eventos">
+                <sequence format="r1">
+                    <spine>${clipsXML}
+                    </spine>
+                </sequence>
+            </project>
+        </event>
+    </library>
+</fcpxml>`;
+
+    const dataStr = "data:text/xml;charset=utf-8," + encodeURIComponent(fcpxml);
+    const link = document.createElement("a");
+    link.setAttribute("href", dataStr);
+    link.setAttribute("download", "cortes_eventos.fcpxml");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handlePlayCut = (segundos: number) => {
     if (playerRef.current) {
-      (playerRef.current as any).currentTime = Math.max(0, segundos - 5);
-      (playerRef.current as any).play?.();
+      const start = Math.max(0, segundos - 5);
+      const player = playerRef.current as any;
+      player.currentTime = start;
+      setPlayingCutEnd(segundos + 10);
+      player.play();
     }
   };
 
@@ -196,6 +240,20 @@ export function EventosTab({ matchId }: EventosTabProps) {
                 width="100%"
                 height="100%"
                 controls
+                onTimeUpdate={(e: any) => {
+                  const currentTime = e.target.currentTime;
+                  if (playingCutEnd && currentTime >= playingCutEnd) {
+                    const internalPlayer = (playerRef.current as any).getInternalPlayer();
+                    if (internalPlayer?.pauseVideo) {
+                      internalPlayer.pauseVideo();
+                    } else if (internalPlayer?.pause) {
+                      internalPlayer.pause();
+                    } else {
+                      e.target.pause();
+                    }
+                    setPlayingCutEnd(null);
+                  }
+                }}
               />
             ) : (
               <span className="font-medium text-sm">Introduce la URL del vídeo para visualizar</span>
@@ -234,6 +292,14 @@ export function EventosTab({ matchId }: EventosTabProps) {
           </h3>
           
           <div className="flex gap-2">
+            <button
+              onClick={exportFCPXML}
+              title="Exportar para iMovie / Final Cut (FCPXML)"
+              className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 transition-colors flex items-center gap-2"
+            >
+              <Film size={18} />
+              <span className="text-xs font-bold hidden sm:inline">iMovie</span>
+            </button>
             <button
               onClick={exportCSV}
               title="Exportar CSV"

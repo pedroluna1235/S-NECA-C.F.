@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Download, Loader2, Play, AlertCircle, Save, Video } from 'lucide-react';
+import { Download, Loader2, Play, AlertCircle, Save, Video, Film } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import ReactPlayer from 'react-player';
@@ -37,6 +37,8 @@ export function AnalisisRivalTab({ matchId }: AnalisisRivalTabProps) {
   const [activeVideo, setActiveVideo] = useState<1 | 2>(1);
   const [video1Url, setVideo1Url] = useState('');
   const [video2Url, setVideo2Url] = useState('');
+  
+  const [playingCutEnd, setPlayingCutEnd] = useState<number | null>(null);
   
   const player1Ref = useRef<any>(null);
   const player2Ref = useRef<any>(null);
@@ -214,6 +216,49 @@ export function AnalisisRivalTab({ matchId }: AnalisisRivalTabProps) {
     document.body.removeChild(link);
   };
 
+  const exportFCPXML = () => {
+    let clipsXML = '';
+    let currentOffset = 0;
+
+    eventos.forEach((e) => {
+      const start = Math.max(0, e.tiempo_segundos - 5);
+      const duration = 15;
+      const assetRef = e.video_index === 1 ? 'r2' : 'r3';
+      
+      clipsXML += `
+                        <clip name="V${e.video_index}: ${e.tipo} - ${e.descripcion.replace(/&/g, '&amp;').replace(/</g, '&lt;')}" ref="${assetRef}" offset="${currentOffset}s" duration="${duration}s" start="${start}s"/>`;
+      currentOffset += duration;
+    });
+
+    const fcpxml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE fcpxml>
+<fcpxml version="1.8">
+    <resources>
+        <format id="r1" name="FFVideoFormat1080p25" frameDuration="1/25s" width="1920" height="1080"/>
+        <asset id="r2" name="Video 1" src="file:///VINCULA_VIDEO_1_AQUI.mp4" start="0s" hasVideo="1" format="r1" hasAudio="1"/>
+        <asset id="r3" name="Video 2" src="file:///VINCULA_VIDEO_2_AQUI.mp4" start="0s" hasVideo="1" format="r1" hasAudio="1"/>
+    </resources>
+    <library>
+        <event name="Analisis Seneca">
+            <project name="Cortes Rival">
+                <sequence format="r1">
+                    <spine>${clipsXML}
+                    </spine>
+                </sequence>
+            </project>
+        </event>
+    </library>
+</fcpxml>`;
+
+    const dataStr = "data:text/xml;charset=utf-8," + encodeURIComponent(fcpxml);
+    const link = document.createElement("a");
+    link.setAttribute("href", dataStr);
+    link.setAttribute("download", "analisis_rival.fcpxml");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handlePlayCut = (segundos: number, videoIndex: 1 | 2) => {
     setActiveVideo(videoIndex);
     
@@ -221,8 +266,11 @@ export function AnalisisRivalTab({ matchId }: AnalisisRivalTabProps) {
     setTimeout(() => {
       const playerRef = videoIndex === 1 ? player1Ref : player2Ref;
       if (playerRef.current) {
-        (playerRef.current as any).currentTime = Math.max(0, segundos - 5);
-        (playerRef.current as any).play?.();
+        const start = Math.max(0, segundos - 5);
+        const player = playerRef.current as any;
+        player.currentTime = start;
+        setPlayingCutEnd(segundos + 10);
+        player.play();
       }
     }, 100);
   };
@@ -296,6 +344,13 @@ export function AnalisisRivalTab({ matchId }: AnalisisRivalTabProps) {
                   width="100%"
                   height="100%"
                   controls
+                  onTimeUpdate={(e: any) => {
+                    const currentTime = e.target.currentTime;
+                    if (playingCutEnd && currentTime >= playingCutEnd) {
+                      e.target.pause();
+                      setPlayingCutEnd(null);
+                    }
+                  }}
                 />
               )}
             </div>
@@ -307,6 +362,13 @@ export function AnalisisRivalTab({ matchId }: AnalisisRivalTabProps) {
                   width="100%"
                   height="100%"
                   controls
+                  onTimeUpdate={(e: any) => {
+                    const currentTime = e.target.currentTime;
+                    if (playingCutEnd && currentTime >= playingCutEnd) {
+                      e.target.pause();
+                      setPlayingCutEnd(null);
+                    }
+                  }}
                 />
               )}
             </div>
@@ -350,6 +412,14 @@ export function AnalisisRivalTab({ matchId }: AnalisisRivalTabProps) {
           </h3>
           
           <div className="flex gap-2">
+            <button
+              onClick={exportFCPXML}
+              title="Exportar para iMovie / Final Cut (FCPXML)"
+              className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 transition-colors flex items-center gap-2"
+            >
+              <Film size={18} />
+              <span className="text-xs font-bold hidden sm:inline">iMovie</span>
+            </button>
             <button
               onClick={exportCSV}
               title="Exportar CSV"
