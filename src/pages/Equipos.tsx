@@ -42,6 +42,21 @@ export function Equipos() {
     setIsModalOpen(true);
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Seguro que quieres eliminar este equipo? Se eliminarán todos los partidos asociados.')) return;
+    try {
+      const { error } = await supabase
+        .from('equipos')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      setTeams(teams.filter(t => t.id !== id));
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      alert('Error al eliminar el equipo.');
+    }
+  };
+
   const filteredTeams = teams.filter(t => 
     t.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -92,7 +107,7 @@ export function Equipos() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {filteredTeams.map((team, index) => (
             <div key={team.id} className="animate-in slide-in-from-bottom-4 fade-in" style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}>
-              <TeamCard team={team} onEdit={handleEdit} />
+              <TeamCard team={team} onEdit={handleEdit} onDelete={handleDelete} />
             </div>
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { Edit2 } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 
 export interface Team {
   id: string;
@@ -9,23 +9,37 @@ export interface Team {
 interface TeamCardProps {
   team: Team;
   onEdit?: (team: Team) => void;
+  onDelete?: (id: string) => void;
 }
 
-export function TeamCard({ team, onEdit }: TeamCardProps) {
+export function TeamCard({ team, onEdit, onDelete }: TeamCardProps) {
   return (
     <div className="group relative flex flex-col items-center justify-center p-6 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-      {/* Botón Editar (Hover) */}
-      {onEdit && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(team);
-          }}
-          className="absolute top-3 left-3 z-20 p-2 bg-white/90 dark:bg-black/70 hover:bg-white dark:hover:bg-black text-neutral-700 dark:text-neutral-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm backdrop-blur-sm"
-        >
-          <Edit2 size={16} />
-        </button>
-      )}
+      {/* Botones (Hover) */}
+      <div className="absolute top-3 right-3 flex items-center gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+        {onEdit && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(team);
+            }}
+            className="p-2 bg-white/90 dark:bg-black/70 hover:bg-white dark:hover:bg-black text-blue-500 hover:text-blue-600 rounded-full shadow-sm backdrop-blur-sm transition-colors"
+          >
+            <Edit2 size={16} />
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(team.id);
+            }}
+            className="p-2 bg-white/90 dark:bg-black/70 hover:bg-white dark:hover:bg-black text-red-500 hover:text-red-600 rounded-full shadow-sm backdrop-blur-sm transition-colors"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
+      </div>
 
       <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full p-2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-100 dark:border-neutral-800 mb-4 overflow-hidden relative shadow-inner group-hover:shadow-md transition-shadow">
         {team.escudo_url ? (

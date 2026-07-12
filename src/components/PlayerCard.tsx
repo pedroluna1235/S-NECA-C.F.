@@ -1,5 +1,5 @@
 import { differenceInYears } from 'date-fns';
-import { Edit2, Eye } from 'lucide-react';
+import { Edit2, Eye, Trash2 } from 'lucide-react';
 
 export interface Player {
   id: string;
@@ -20,9 +20,10 @@ interface PlayerCardProps {
   player: Player;
   onEdit?: (player: Player) => void;
   onView?: (player: Player) => void;
+  onDelete?: (id: string) => void;
 }
 
-export function PlayerCard({ player, onEdit, onView }: PlayerCardProps) {
+export function PlayerCard({ player, onEdit, onView, onDelete }: PlayerCardProps) {
   let age: string | number = 'N/A';
   
   if (player.fecha_nacimiento) {
@@ -43,6 +44,20 @@ export function PlayerCard({ player, onEdit, onView }: PlayerCardProps) {
         <div className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
           {player.dorsal}
         </div>
+      )}
+
+      {/* Botón de eliminar en hover */}
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(player.id);
+          }}
+          className="absolute top-3 left-3 z-20 p-2 bg-white/90 dark:bg-black/70 hover:bg-red-50 dark:hover:bg-red-900/40 text-neutral-400 hover:text-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm backdrop-blur-sm"
+          title="Eliminar jugador"
+        >
+          <Trash2 size={16} />
+        </button>
       )}
       
       {/* Imagen del jugador */}

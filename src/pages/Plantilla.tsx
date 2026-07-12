@@ -62,6 +62,24 @@ export function Plantilla() {
     setIsModalOpen(true);
   };
 
+  const handleDelete = async (id: string) => {
+    if (role === 'lector') return;
+    if (!confirm('¿Seguro que quieres eliminar este jugador? Perderás todo su historial y objetivos.')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('jugadores')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      setPlayers(players.filter(p => p.id !== id));
+    } catch (error) {
+      console.error('Error deleting player:', error);
+      alert('Error al eliminar el jugador.');
+    }
+  };
+
   const filteredPlayers = players.filter(p => {
     const nombreStr = p.nombre || '';
     const demarcacionStr = p.demarcacion || '';
@@ -171,7 +189,13 @@ export function Plantilla() {
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                   {groupPlayers.map(player => (
-                    <PlayerCard key={player.id} player={player} onEdit={handleEdit} onView={handleView} />
+                    <PlayerCard 
+                      key={player.id} 
+                      player={player} 
+                      onEdit={handleEdit} 
+                      onView={handleView}
+                      onDelete={role === 'lector' ? undefined : handleDelete}
+                    />
                   ))}
                 </div>
               </div>
