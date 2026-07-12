@@ -301,7 +301,7 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       currentY += 10;
       
       const convocados = jugadores.filter(j => selectedJugadores.includes(j.id));
-      const posiciones = ['Portero', 'Defensa', 'Medio', 'Delantero'];
+      const posiciones = ['Portero', 'Defensa', 'Centrocampista', 'Delantero'];
       
       // Pre-load all player images to Base64 to avoid rendering issues
       const playerImages: Record<string, string | null> = {};
@@ -421,7 +421,7 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
   const groupedJugadores = {
     Portero: jugadores.filter(j => j.demarcacion === 'Portero'),
     Defensa: jugadores.filter(j => j.demarcacion === 'Defensa'),
-    Medio: jugadores.filter(j => j.demarcacion === 'Medio'),
+    Centrocampista: jugadores.filter(j => j.demarcacion === 'Centrocampista'),
     Delantero: jugadores.filter(j => j.demarcacion === 'Delantero'),
   };
 
