@@ -416,41 +416,54 @@ export function EventosTab({ matchId }: EventosTabProps) {
               <p>No hay eventos registrados</p>
             </div>
           ) : (
-            eventos.map((ev) => {
-              const eventType = EVENT_TYPES.find(t => t.tipo === ev.tipo);
+            Object.entries(
+              eventos.reduce((acc, ev) => {
+                if (!acc[ev.tipo]) acc[ev.tipo] = [];
+                acc[ev.tipo].push(ev);
+                return acc;
+              }, {} as Record<string, typeof eventos>)
+            ).map(([tipo, grupoEventos]) => {
+              const eventType = EVENT_TYPES.find(t => t.tipo === tipo);
               return (
-                <div key={ev.id} className="group flex gap-4 p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-200 dark:border-neutral-800/50 transition-all hover:border-neutral-300 dark:hover:border-neutral-700">
-                  
-                  <div className="flex flex-col items-center gap-2">
-                    <span className={cn("px-3 py-1 rounded-full text-xs font-bold w-20 text-center", eventType?.color, eventType?.text)}>
-                      {ev.tipo}
-                    </span>
-                    <button 
-                      onClick={() => handlePlayCut(ev.tiempo_segundos)}
-                      className="flex items-center justify-center gap-1 text-sm font-black text-red-600 dark:text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      <Play size={14} className="fill-current"/> {formatTime(ev.tiempo_segundos)}
-                    </button>
-                  </div>
+                <div key={tipo} className="space-y-3">
+                  <h4 className={cn("text-xs font-black uppercase tracking-wider flex items-center gap-2", eventType?.text)}>
+                    <div className={cn("w-2 h-2 rounded-full", eventType?.color)}></div>
+                    {tipo} ({grupoEventos.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {grupoEventos.map((ev) => (
+                      <div key={ev.id} className="group flex gap-4 p-4 bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-200 dark:border-neutral-800/50 transition-all hover:border-neutral-300 dark:hover:border-neutral-700">
+                        
+                        <div className="flex flex-col items-center justify-center gap-1 w-20">
+                          <button 
+                            onClick={() => handlePlayCut(ev.tiempo_segundos)}
+                            className="flex items-center justify-center gap-1 text-sm font-black text-red-600 dark:text-red-500 hover:text-red-700 transition-colors"
+                          >
+                            <Play size={14} className="fill-current"/> {formatTime(ev.tiempo_segundos)}
+                          </button>
+                        </div>
 
-                  <div className="flex-1 flex flex-col justify-center">
-                    <input
-                      type="text"
-                      value={ev.descripcion}
-                      onChange={(e) => handleUpdateDescription(ev.id!, e.target.value)}
-                      className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400"
-                      placeholder="Añade una descripción..."
-                    />
-                  </div>
+                        <div className="flex-1 flex flex-col justify-center border-l border-neutral-200 dark:border-neutral-700 pl-4">
+                          <input
+                            type="text"
+                            value={ev.descripcion}
+                            onChange={(e) => handleUpdateDescription(ev.id!, e.target.value)}
+                            className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400"
+                            placeholder="Añade una descripción..."
+                          />
+                        </div>
 
-                  <button
-                    onClick={() => handleDelete(ev.id!)}
-                    className="opacity-0 group-hover:opacity-100 p-2 text-neutral-400 hover:text-red-500 transition-all self-center rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                  </button>
+                        <button
+                          onClick={() => handleDelete(ev.id!)}
+                          className="opacity-0 group-hover:opacity-100 p-2 text-neutral-400 hover:text-red-500 transition-all self-center rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )
+              );
             })
           )}
         </div>
