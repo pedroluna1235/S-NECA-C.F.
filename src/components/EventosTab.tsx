@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Download, Loader2, Play, AlertCircle, FileJson, Film } from 'lucide-react';
+import { Download, Loader2, Play, AlertCircle, FileJson, Film, Terminal } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import ReactPlayer from 'react-player';
@@ -30,6 +30,9 @@ export function EventosTab({ matchId }: EventosTabProps) {
   const [eventos, setEventos] = useState<EventoData[]>([]);
   const [videoUrl, setVideoUrl] = useState('');
   const [playingCutEnd, setPlayingCutEnd] = useState<number | null>(null);
+  
+  const [showXMLModal, setShowXMLModal] = useState(false);
+  const [localVideoPath, setLocalVideoPath] = useState('');
   
   const playerRef = useRef<any>(null);
 
@@ -131,12 +134,14 @@ export function EventosTab({ matchId }: EventosTabProps) {
 
   const exportCSV = () => {
     const headers = ['Tipo', 'Tiempo', 'Descripción', 'URL Video (Corte)'];
-    const rows = eventos.map(e => [
-      e.tipo,
-      formatTime(e.tiempo_segundos),
-      `"${e.descripcion.replace(/"/g, '""')}"`,
-      `"${e.video_url}#t=${Math.max(0, e.tiempo_segundos - 5)},${e.tiempo_segundos + 10}"`
-    ]);
+    const rows = eventos.map(e => {
+      return [
+        e.tipo,
+        formatTime(e.tiempo_segundos),
+        `"${(e.descripcion || '').replace(/"/g, '""')}"`,
+        `"${videoUrl}#t=${Math.max(0, e.tiempo_segundos - 5)},${e.tiempo_segundos + 10}"`
+      ];
+    });
     
     const csvContent = "data:text/csv;charset=utf-8," 
       + headers.join(",") + "\n" 
@@ -162,14 +167,53 @@ export function EventosTab({ matchId }: EventosTabProps) {
   };
 
   const exportFCPXML = () => {
+    setShowXMLModal(true);
+  };
+
+  const generateFinalFCPXML = () => {
     let clipsXML = '';
     let currentOffset = 0;
 
-    eventos.forEach((e) => {
+    let safePath = localVideoPath.trim() || "/Users/pedroluna/Downloads/Segunda parte Santaella 1.mp4";
+    if (!safePath.startsWith("file://")) {
+      safePath = "file://" + safePath.split('/').map(encodeURIComponent).join('/');
+    }
+
+    const getSafeDuration = (ref: any) => {
+      try {
+        if (!ref.current) return 7200;
+        if (typeof ref.current.getDuration === 'function') return Math.floor(ref.current.getDuration()) || 7200;
+        if (ref.current.duration) return Math.floor(ref.current.duration) || 7200;
+      } catch (e) {}
+      return 7200;
+    };
+
+    const realDuration = getSafeDuration(playerRef);
+
+    const mergedClips: any[] = [];
+    const sortedEvents = [...eventos].sort((a, b) => a.tiempo_segundos - b.tiempo_segundos);
+
+    sortedEvents.forEach((e) => {
       const start = Math.max(0, e.tiempo_segundos - 5);
-      const duration = 15;
+      const end = start + 15;
+      const safeDesc = (e.descripcion || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      const name = `${e.tipo} - ${safeDesc}`;
+      
+      if (mergedClips.length > 0) {
+        const lastClip = mergedClips[mergedClips.length - 1];
+        if (start <= lastClip.end) {
+          lastClip.end = Math.max(lastClip.end, end);
+          lastClip.name += ` y ${e.tipo}`;
+          return;
+        }
+      }
+      mergedClips.push({ start, end, name });
+    });
+
+    mergedClips.forEach((clip) => {
+      const duration = clip.end - clip.start;
       clipsXML += `
-                        <clip name="${e.tipo} - ${e.descripcion.replace(/&/g, '&amp;').replace(/</g, '&lt;')}" ref="r2" offset="${currentOffset}s" duration="${duration}s" start="${start}s"/>`;
+                        <asset-clip name="${clip.name}" ref="r2" offset="${currentOffset}s" duration="${duration}s" start="${clip.start}s" tcFormat="NDF"/>`;
       currentOffset += duration;
     });
 
@@ -178,12 +222,12 @@ export function EventosTab({ matchId }: EventosTabProps) {
 <fcpxml version="1.8">
     <resources>
         <format id="r1" name="FFVideoFormat1080p25" frameDuration="1/25s" width="1920" height="1080"/>
-        <asset id="r2" name="Video Partido" src="file:///RUTA_DEL_VIDEO_DESCARGADO.mp4" start="0s" hasVideo="1" format="r1" hasAudio="1"/>
+        <asset id="r2" name="Partido Original" src="${safePath}" start="0s" duration="${realDuration}s" hasVideo="1" format="r1" hasAudio="1"/>
     </resources>
     <library>
         <event name="Analisis Seneca">
             <project name="Cortes Eventos">
-                <sequence format="r1">
+                <sequence format="r1" tcStart="0s" tcFormat="NDF">
                     <spine>${clipsXML}
                     </spine>
                 </sequence>
@@ -196,6 +240,45 @@ export function EventosTab({ matchId }: EventosTabProps) {
     const link = document.createElement("a");
     link.setAttribute("href", dataStr);
     link.setAttribute("download", "cortes_eventos.fcpxml");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setShowXMLModal(false);
+  };
+
+  const exportFFmpegScript = () => {
+    let script = `#!/bin/bash\n\n`;
+    script += `# Script para descargar y unir los cortes automáticamente en Mac/Linux\n`;
+    script += `# Asegúrate de tener instalados 'yt-dlp' y 'ffmpeg'\n`;
+    script += `# En Mac puedes instalarlos con: brew install yt-dlp ffmpeg\n\n`;
+    
+    script += `mkdir -p cortes_temporales\ncd cortes_temporales\n\n`;
+    
+    const fileList: string[] = [];
+    eventos.forEach((e, index) => {
+      const start = Math.max(0, e.tiempo_segundos - 5);
+      const startStr = formatTime(start);
+      const endStr = formatTime(start + 15);
+      const filename = `corte_${String(index).padStart(3, '0')}.mp4`;
+      fileList.push(`file '${filename}'`);
+      
+      script += `echo "Descargando corte ${index + 1} de ${eventos.length}..."\n`;
+      script += `yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4" --download-sections "*${startStr}-${endStr}" "${videoUrl}" -o "${filename}"\n`;
+    });
+    
+    script += `\necho "Creando lista de concatenación..."\n`;
+    script += `cat <<EOF > lista.txt\n${fileList.join('\n')}\nEOF\n\n`;
+    
+    script += `echo "Uniendo todos los cortes en analisis_final.mp4..."\n`;
+    script += `ffmpeg -f concat -safe 0 -i lista.txt -c copy ../analisis_final.mp4\n\n`;
+    
+    script += `cd ..\nrm -rf cortes_temporales\n\n`;
+    script += `echo "¡Proceso terminado con éxito! Tu vídeo es analisis_final.mp4"\n`;
+
+    const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(script);
+    const link = document.createElement("a");
+    link.setAttribute("href", dataStr);
+    link.setAttribute("download", "generar_video_cortes.sh");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -216,7 +299,8 @@ export function EventosTab({ matchId }: EventosTabProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full min-h-[600px] animate-in fade-in duration-500">
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full min-h-[600px] animate-in fade-in duration-500">
       
       {/* Lado Izquierdo: Reproductor y Botones de Evento */}
       <div className="flex flex-col space-y-6">
@@ -293,12 +377,20 @@ export function EventosTab({ matchId }: EventosTabProps) {
           
           <div className="flex gap-2">
             <button
+              onClick={exportFFmpegScript}
+              title="Descargar vídeo final MP4 (Script)"
+              className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 transition-colors flex items-center gap-2"
+            >
+              <Terminal size={18} />
+              <span className="text-xs font-bold hidden sm:inline">Generar .MP4</span>
+            </button>
+            <button
               onClick={exportFCPXML}
-              title="Exportar para iMovie / Final Cut (FCPXML)"
+              title="Exportar para DaVinci / Final Cut (FCPXML)"
               className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 transition-colors flex items-center gap-2"
             >
               <Film size={18} />
-              <span className="text-xs font-bold hidden sm:inline">iMovie</span>
+              <span className="text-xs font-bold hidden sm:inline">DaVinci</span>
             </button>
             <button
               onClick={exportCSV}
@@ -362,8 +454,40 @@ export function EventosTab({ matchId }: EventosTabProps) {
             })
           )}
         </div>
+        </div>
       </div>
 
-    </div>
+      {showXMLModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 w-full max-w-lg border border-neutral-200 dark:border-neutral-800 shadow-2xl space-y-4">
+            <h3 className="text-xl font-black text-neutral-900 dark:text-white flex items-center gap-2">
+              <Film className="text-red-500" />
+              Vincular Vídeo Real
+            </h3>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              Para que DaVinci Resolve pueda importar los cortes correctamente, necesita saber la ruta absoluta del vídeo en tu Mac. Si no la pones, usará una por defecto que podrás buscar manualmente después.
+            </p>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase">Ruta absoluta del vídeo original</label>
+              <input 
+                type="text" 
+                value={localVideoPath} 
+                onChange={(e) => setLocalVideoPath(e.target.value)}
+                placeholder="/Users/pedroluna/Downloads/Segunda parte Santaella 1.mp4"
+                className="w-full px-4 py-3 bg-neutral-100 dark:bg-neutral-800 border-none rounded-xl focus:ring-2 focus:ring-red-500 transition-all text-sm"
+              />
+            </div>
+            <div className="flex gap-3 justify-end pt-4">
+              <button onClick={() => setShowXMLModal(false)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                Cancelar
+              </button>
+              <button onClick={generateFinalFCPXML} className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-black hover:bg-red-700 transition-colors shadow-sm">
+                Descargar FCPXML
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
