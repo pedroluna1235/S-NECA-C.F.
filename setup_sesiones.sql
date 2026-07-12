@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS sesiones (
   titulo text NOT NULL,
   pdf_url text NOT NULL,
   observaciones text,
+  asistentes uuid[],
   created_at timestamp with time zone DEFAULT now()
 );
 

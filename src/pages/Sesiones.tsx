@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Calendar, List, BookOpen } from 'lucide-react';
+import { Calendar, List, BookOpen, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CalendarioSesiones } from '../components/sesiones/CalendarioSesiones';
 import { HistorialSesiones } from '../components/sesiones/HistorialSesiones';
+import { HistorialAsistencia } from '../components/sesiones/HistorialAsistencia';
 
 export type Sesion = {
   id: string;
@@ -11,11 +12,12 @@ export type Sesion = {
   titulo: string;
   pdf_url: string;
   observaciones?: string;
+  asistentes?: string[];
   created_at: string;
 };
 
 export function Sesiones() {
-  const [activeTab, setActiveTab] = useState<'calendario' | 'historial'>('calendario');
+  const [activeTab, setActiveTab] = useState<'calendario' | 'historial' | 'asistencia'>('calendario');
   const [sesiones, setSesiones] = useState<Sesion[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,6 +80,17 @@ export function Sesiones() {
           <List size={20} />
           Historial de Sesiones
         </button>
+        <button
+          onClick={() => setActiveTab('asistencia')}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
+            activeTab === 'asistencia'
+              ? 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-500 shadow-sm'
+              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <Users size={20} />
+          Historial de Asistencia
+        </button>
       </div>
 
       {/* Content */}
@@ -91,10 +104,14 @@ export function Sesiones() {
             sesiones={sesiones} 
             onSesionAdded={fetchSesiones} 
           />
-        ) : (
+        ) : activeTab === 'historial' ? (
           <HistorialSesiones 
             sesiones={sesiones} 
             onSesionDeleted={fetchSesiones} 
+          />
+        ) : (
+          <HistorialAsistencia 
+            sesiones={sesiones} 
           />
         )}
       </div>

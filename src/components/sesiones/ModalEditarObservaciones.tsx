@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type { Sesion } from '../../pages/Sesiones';
@@ -11,8 +11,39 @@ interface ModalEditarObservacionesProps {
 
 export function ModalEditarObservaciones({ sesion, onClose, onSuccess }: ModalEditarObservacionesProps) {
   const [observaciones, setObservaciones] = useState(sesion.observaciones || '');
+  const [asistentes, setAsistentes] = useState<string[]>(sesion.asistentes || []);
+  const [jugadores, setJugadores] = useState<{ id: string; nombre: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingJugadores, setLoadingJugadores] = useState(true);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchJugadores = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('jugadores')
+          .select('id, nombre')
+          .order('nombre');
+        
+        if (error) throw error;
+        setJugadores(data || []);
+      } catch (err) {
+        console.error('Error cargando jugadores:', err);
+      } finally {
+        setLoadingJugadores(false);
+      }
+    };
+
+    fetchJugadores();
+  }, []);
+
+  const toggleAsistente = (jugadorId: string) => {
+    setAsistentes(prev => 
+      prev.includes(jugadorId)
+        ? prev.filter(id => id !== jugadorId)
+        : [...prev, jugadorId]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +53,10 @@ export function ModalEditarObservaciones({ sesion, onClose, onSuccess }: ModalEd
     try {
       const { error: updateError } = await supabase
         .from('sesiones')
-        .update({ observaciones: observaciones.trim() || null })
+        .update({ 
+          observaciones: observaciones.trim() || null,
+          asistentes: asistentes
+        })
         .eq('id', sesion.id);
 
       if (updateError) throw updateError;
@@ -70,6 +104,52 @@ export function ModalEditarObservaciones({ sesion, onClose, onSuccess }: ModalEd
               className="w-full px-4 py-2.5 bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-neutral-900 dark:text-white transition-shadow resize-none"
               autoFocus
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex justify-between items-center">
+              <span>Asistencia</span>
+              <span className="text-xs font-normal text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded-full">
+                {asistentes.length} / {jugadores.length}
+              </span>
+            </label>
+            
+            <div className="bg-white dark:bg-neutral-950 border border-neutral-300 dark:border-neutral-700 rounded-lg max-h-48 overflow-y-auto p-2 space-y-1">
+              {loadingJugadores ? (
+                <div className="p-4 text-center text-sm text-neutral-500 flex justify-center items-center gap-2">
+                  <Loader2 size={16} className="animate-spin" /> Cargando jugadores...
+                </div>
+              ) : jugadores.length === 0 ? (
+                <div className="p-4 text-center text-sm text-neutral-500">
+                  No hay jugadores registrados
+                </div>
+              ) : (
+                jugadores.map((jugador) => (
+                  <label 
+                    key={jugador.id}
+                    className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors ${
+                      asistentes.includes(jugador.id)
+                        ? 'bg-red-50 dark:bg-red-500/10'
+                        : 'hover:bg-neutral-50 dark:hover:bg-neutral-800'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={asistentes.includes(jugador.id)}
+                      onChange={() => toggleAsistente(jugador.id)}
+                      className="w-4 h-4 text-red-600 rounded border-neutral-300 focus:ring-red-500"
+                    />
+                    <span className={`text-sm font-medium ${
+                      asistentes.includes(jugador.id)
+                        ? 'text-red-700 dark:text-red-400'
+                        : 'text-neutral-700 dark:text-neutral-300'
+                    }`}>
+                      {jugador.nombre}
+                    </span>
+                  </label>
+                ))
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">

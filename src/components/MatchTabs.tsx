@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { cn } from '../lib/utils';
 import { type Match } from './MatchCard';
 import { AnalisisRivalTab } from './AnalisisRivalTab';
+import { PizarraTacticaTab } from './PizarraTacticaTab';
 import { InformeRivalTab } from './InformeRivalTab';
 import { AlineacionTab } from './AlineacionTab';
 import { PlanPartidoTab } from './PlanPartidoTab';
@@ -13,7 +14,7 @@ interface MatchTabsProps {
   match: Match;
 }
 
-type TabId = 'analisis_rival' | 'informe' | 'alineacion' | 'plan' | 'abp' | 'convocatoria' | 'eventos';
+type TabId = 'analisis_rival' | 'pizarra_tactica' | 'informe' | 'alineacion' | 'plan' | 'abp' | 'convocatoria' | 'eventos';
 
 interface Tab {
   id: TabId;
@@ -22,6 +23,7 @@ interface Tab {
 
 const TABS: Tab[] = [
   { id: 'analisis_rival', label: 'Análisis de rival' },
+  { id: 'pizarra_tactica', label: 'Pizarra táctica' },
   { id: 'informe', label: 'Informe rival' },
   { id: 'alineacion', label: 'Alineación' },
   { id: 'plan', label: 'Plan de partido' },
@@ -56,6 +58,8 @@ export function MatchTabs({ match }: MatchTabsProps) {
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-6">
         {activeTab === 'analisis_rival' && <AnalisisRivalTab matchId={match.id} />}
+        
+        {activeTab === 'pizarra_tactica' && <PizarraTacticaTab matchId={match.id} />}
         
         {activeTab === 'informe' && <InformeRivalTab matchId={match.id} />}
         
