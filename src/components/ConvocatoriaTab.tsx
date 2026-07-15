@@ -206,7 +206,7 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       doc.rect(0, 0, pageWidth, 35, 'F');
       
       // Load and add Logos
-      const localLogoBase64 = await getBase64ImageFromUrl('/logo.jpg');
+      const localLogoBase64 = await getBase64ImageFromUrl('/logo.png');
       const rivalLogoBase64 = matchDetails.rival?.escudo_url ? await getBase64ImageFromUrl(matchDetails.rival.escudo_url) : null;
       
       const isLocal = matchDetails.condicion !== 'Visitante';

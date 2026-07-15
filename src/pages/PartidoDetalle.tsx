@@ -64,7 +64,7 @@ export function PartidoDetalle() {
   });
 
   const isLocal = match.condicion !== 'Visitante';
-  const localTeamLogo = '/logo.jpg';
+  const localTeamLogo = '/logo.png';
   const localTeamName = 'SÉNECA C.F.';
 
   return (

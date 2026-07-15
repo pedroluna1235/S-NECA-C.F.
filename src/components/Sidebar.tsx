@@ -63,7 +63,7 @@ export function Sidebar() {
         {/* Logo Area */}
         <div className="p-6 flex items-center gap-3 border-b border-neutral-200 dark:border-neutral-800">
           <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-white font-bold text-xl shadow-lg border-2 border-red-600 overflow-hidden">
-            <img src="/logo.jpg" alt="SÉNECA C.F." className="w-full h-full object-contain p-1" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="text-red-600 font-bold">S</span>'; }} />
+            <img src="/logo.png?v=2" alt="SÉNECA C.F." className="w-full h-full object-contain p-1" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="text-red-600 font-bold">S</span>'; }} />
           </div>
           <div>
             <h1 className="font-bold text-xl tracking-tight text-neutral-900 dark:text-white">SÉNECA C.F.</h1>

@@ -33,7 +33,7 @@ export const Login: React.FC = () => {
         <div className="flex justify-center">
           <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-full border-4 border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.3)] flex items-center justify-center overflow-hidden relative group">
             <img 
-              src="/logo.jpg" 
+              src="/logo.png?v=2" 
               alt="Escudo SÉNECA C.F." 
               className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-300"
               onError={(e) => {

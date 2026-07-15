@@ -22,7 +22,7 @@ interface MatchCardProps {
   onDelete?: (match: Match) => void;
 }
 
-export function MatchCard({ match, localTeamName = 'SÉNECA C.F.', localTeamLogo = '/logo.jpg', onDelete }: MatchCardProps) {
+export function MatchCard({ match, localTeamName = 'SÉNECA C.F.', localTeamLogo = '/logo.png', onDelete }: MatchCardProps) {
   const isLiga = match.tipo === 'Liga';
   const isCopa = match.tipo === 'Copa';
   const isLocal = match.condicion !== 'Visitante';
