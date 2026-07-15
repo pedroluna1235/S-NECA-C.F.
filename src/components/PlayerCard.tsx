@@ -9,6 +9,7 @@ export interface Player {
   fecha_nacimiento: string | null;
   lateralidad?: string | null;
   foto_url: string | null;
+  gustos?: string | null;
   estadisticas_generales?: any;
   stats_con_balon?: any;
   stats_sin_balon?: any;

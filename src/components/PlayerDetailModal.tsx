@@ -89,6 +89,7 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
   };
   
   // State for editable stats
+  const [gustos, setGustos] = useState('');
   const [statsGen, setStatsGen] = useState(DEFAULT_STATS_GEN);
   const [statsConBalon, setStatsConBalon] = useState(DEFAULT_STATS_CON_BALON);
   const [statsSinBalon, setStatsSinBalon] = useState(DEFAULT_STATS_SIN_BALON);
@@ -96,6 +97,7 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
 
   useEffect(() => {
     if (isOpen && player) {
+      setGustos(player.gustos || '');
       setStatsGen(player.estadisticas_generales || DEFAULT_STATS_GEN);
       setStatsConBalon(player.stats_con_balon || DEFAULT_STATS_CON_BALON);
       setStatsSinBalon(player.stats_sin_balon || DEFAULT_STATS_SIN_BALON);
@@ -119,6 +121,7 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
       const { error } = await supabase
         .from('jugadores')
         .update({
+          gustos,
           estadisticas_generales: statsGen,
           stats_con_balon: statsConBalon,
           stats_sin_balon: statsSinBalon,
@@ -268,7 +271,7 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl text-center border border-neutral-100 dark:border-neutral-800">
                 <div className="flex items-center justify-center gap-1">
                   <button onClick={() => setStatsGen({...statsGen, partidos: Math.max(0, statsGen.partidos - 1)})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-neutral-700 shadow-sm text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Minus size={14}/></button>
@@ -308,6 +311,16 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
                 </div>
                 <p className="text-xs text-green-600 dark:text-green-500 font-bold uppercase mt-2">Goles</p>
               </div>
+            </div>
+
+            <div className="mb-8">
+              <label className="block text-xs font-bold text-neutral-500 uppercase mb-2 ml-1">Gustos e Intereses</label>
+              <textarea 
+                placeholder="Ej: Le gusta jugar a los videojuegos, es muy competitivo, su equipo favorito es el Betis..."
+                value={gustos}
+                onChange={e => setGustos(e.target.value)}
+                className="w-full h-24 p-4 bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium text-neutral-900 dark:text-white resize-none transition-all"
+              />
             </div>
 
             <div className="flex gap-3" data-html2canvas-ignore="true">
