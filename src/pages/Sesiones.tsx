@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { CalendarioSesiones } from '../components/sesiones/CalendarioSesiones';
 import { HistorialSesiones } from '../components/sesiones/HistorialSesiones';
 import { HistorialAsistencia } from '../components/sesiones/HistorialAsistencia';
+import { DisenadorSesion } from '../components/sesiones/DisenadorSesion';
 
 export type Sesion = {
   id: string;
@@ -17,7 +18,7 @@ export type Sesion = {
 };
 
 export function Sesiones() {
-  const [activeTab, setActiveTab] = useState<'calendario' | 'historial' | 'asistencia'>('calendario');
+  const [activeTab, setActiveTab] = useState<'calendario' | 'historial' | 'asistencia' | 'disenar'>('calendario');
   const [sesiones, setSesiones] = useState<Sesion[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -91,6 +92,17 @@ export function Sesiones() {
           <Users size={20} />
           Historial de Asistencia
         </button>
+        <button
+          onClick={() => setActiveTab('disenar')}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
+            activeTab === 'disenar'
+              ? 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-500 shadow-sm'
+              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <BookOpen size={20} />
+          Diseñar Sesión
+        </button>
       </div>
 
       {/* Content */}
@@ -108,6 +120,13 @@ export function Sesiones() {
           <HistorialSesiones 
             sesiones={sesiones} 
             onSesionDeleted={fetchSesiones} 
+          />
+        ) : activeTab === 'disenar' ? (
+          <DisenadorSesion 
+            onSesionGuardada={() => {
+              fetchSesiones();
+              setActiveTab('calendario');
+            }}
           />
         ) : (
           <HistorialAsistencia 
