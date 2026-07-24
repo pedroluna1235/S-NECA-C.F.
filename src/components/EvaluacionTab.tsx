@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, Loader2, Users, Star, Clock, Target } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { cn } from '../lib/utils';
 import toast from 'react-hot-toast';
 
 interface EvaluacionTabProps {
