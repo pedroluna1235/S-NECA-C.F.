@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Save, Loader2, PlayCircle, FileText, Plus, Minus } from 'lucide-react';
+import { X, Save, Loader2, PlayCircle, FileText, Star, Clock, Target } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 import { type Player } from './PlayerCard';
@@ -9,7 +9,6 @@ import { VideoModal } from './VideoModal';
 import { ObjectiveModal } from './ObjectiveModal';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import { Target } from 'lucide-react';
 
 interface PlayerDetailModalProps {
   isOpen: boolean;
@@ -17,8 +16,6 @@ interface PlayerDetailModalProps {
   player: Player | null;
   onSuccess: () => void;
 }
-
-const DEFAULT_STATS_GEN = { partidos: 0, titular: 0, goles: 0 };
 const DEFAULT_STATS_CON_BALON = { pase_corto: 50, disparo: 50, vision: 50, control: 50, regate: 50 };
 const DEFAULT_STATS_SIN_BALON = { presion: 50, recuperacion: 50, posicionamiento: 50, marcaje: 50, anticipacion: 50 };
 const DEFAULT_STATS_FISICO = { velocidad: 50, salto: 50, agilidad: 50, resistencia: 50, fuerza: 50 };
@@ -90,18 +87,68 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
   
   // State for editable stats
   const [gustos, setGustos] = useState('');
-  const [statsGen, setStatsGen] = useState(DEFAULT_STATS_GEN);
   const [statsConBalon, setStatsConBalon] = useState(DEFAULT_STATS_CON_BALON);
   const [statsSinBalon, setStatsSinBalon] = useState(DEFAULT_STATS_SIN_BALON);
   const [statsFisico, setStatsFisico] = useState(DEFAULT_STATS_FISICO);
 
+  // State for calculated stats
+  const [autoStats, setAutoStats] = useState({ minutos: 0, goles: 0, notaMedia: 0 });
+  const [loadingStats, setLoadingStats] = useState(false);
+
   useEffect(() => {
     if (isOpen && player) {
       setGustos(player.gustos || '');
-      setStatsGen(player.estadisticas_generales || DEFAULT_STATS_GEN);
       setStatsConBalon(player.stats_con_balon || DEFAULT_STATS_CON_BALON);
       setStatsSinBalon(player.stats_sin_balon || DEFAULT_STATS_SIN_BALON);
       setStatsFisico(player.stats_fisico || DEFAULT_STATS_FISICO);
+      
+      // Fetch evaluations for this player
+      const fetchEvaluations = async () => {
+        try {
+          setLoadingStats(true);
+          const { data, error } = await supabase
+            .from('evaluaciones_partido')
+            .select('minutos_jugados, goles, nota')
+            .eq('jugador_id', player.id);
+            
+          if (error) {
+            // Ignore if table doesn't exist yet
+            if (error.code !== '42P01') throw error;
+          }
+          
+          if (data && data.length > 0) {
+            let totalMinutos = 0;
+            let totalGoles = 0;
+            let totalNotas = 0;
+            let partidosConNota = 0;
+            
+            data.forEach(ev => {
+              totalMinutos += (ev.minutos_jugados || 0);
+              totalGoles += (ev.goles || 0);
+              if (ev.nota && ev.nota > 0) {
+                totalNotas += ev.nota;
+                partidosConNota++;
+              }
+            });
+            
+            const notaMedia = partidosConNota > 0 ? (totalNotas / partidosConNota).toFixed(1) : 0;
+            
+            setAutoStats({
+              minutos: totalMinutos,
+              goles: totalGoles,
+              notaMedia: Number(notaMedia)
+            });
+          } else {
+            setAutoStats({ minutos: 0, goles: 0, notaMedia: 0 });
+          }
+        } catch (error) {
+          console.error("Error fetching automatic stats:", error);
+        } finally {
+          setLoadingStats(false);
+        }
+      };
+      
+      fetchEvaluations();
     }
   }, [isOpen, player]);
 
@@ -122,7 +169,6 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
         .from('jugadores')
         .update({
           gustos,
-          estadisticas_generales: statsGen,
           stats_con_balon: statsConBalon,
           stats_sin_balon: statsSinBalon,
           stats_fisico: statsFisico
@@ -272,44 +318,39 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl text-center border border-neutral-100 dark:border-neutral-800">
-                <div className="flex items-center justify-center gap-1">
-                  <button onClick={() => setStatsGen({...statsGen, partidos: Math.max(0, statsGen.partidos - 1)})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-neutral-700 shadow-sm text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Minus size={14}/></button>
-                  <input 
-                    type="number" 
-                    className="text-2xl font-black text-neutral-900 dark:text-white bg-transparent w-16 text-center focus:outline-none focus:bg-white dark:focus:bg-neutral-800 rounded-lg transition-colors" 
-                    value={statsGen.partidos}
-                    onChange={e => setStatsGen({...statsGen, partidos: parseInt(e.target.value) || 0})}
-                  />
-                  <button onClick={() => setStatsGen({...statsGen, partidos: statsGen.partidos + 1})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-neutral-700 shadow-sm text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Plus size={14}/></button>
-                </div>
-                <p className="text-xs text-neutral-500 font-bold uppercase mt-2">Partidos</p>
+              <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl text-center border border-neutral-100 dark:border-neutral-800 flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {loadingStats ? (
+                  <Loader2 size={24} className="animate-spin text-neutral-400 mb-1" />
+                ) : (
+                  <span className="text-3xl font-black text-neutral-900 dark:text-white drop-shadow-sm">{autoStats.minutos}</span>
+                )}
+                <p className="text-xs text-neutral-500 font-bold uppercase mt-1 flex items-center gap-1">
+                  <Clock size={12} /> Minutos
+                </p>
               </div>
-              <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl text-center border border-neutral-100 dark:border-neutral-800">
-                <div className="flex items-center justify-center gap-1">
-                  <button onClick={() => setStatsGen({...statsGen, titular: Math.max(0, statsGen.titular - 1)})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-neutral-700 shadow-sm text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Minus size={14}/></button>
-                  <input 
-                    type="number" 
-                    className="text-2xl font-black text-neutral-900 dark:text-white bg-transparent w-16 text-center focus:outline-none focus:bg-white dark:focus:bg-neutral-800 rounded-lg transition-colors" 
-                    value={statsGen.titular}
-                    onChange={e => setStatsGen({...statsGen, titular: parseInt(e.target.value) || 0})}
-                  />
-                  <button onClick={() => setStatsGen({...statsGen, titular: statsGen.titular + 1})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-neutral-700 shadow-sm text-neutral-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"><Plus size={14}/></button>
-                </div>
-                <p className="text-xs text-neutral-500 font-bold uppercase mt-2">Titular</p>
+              <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-2xl text-center border border-green-200 dark:border-green-800/50 flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {loadingStats ? (
+                  <Loader2 size={24} className="animate-spin text-green-400 mb-1" />
+                ) : (
+                  <span className="text-3xl font-black text-green-700 dark:text-green-400 drop-shadow-sm">{autoStats.goles}</span>
+                )}
+                <p className="text-xs text-green-600 dark:text-green-500 font-bold uppercase mt-1 flex items-center gap-1">
+                  <Target size={12} /> Goles
+                </p>
               </div>
-              <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-2xl text-center border border-green-200 dark:border-green-800/50">
-                <div className="flex items-center justify-center gap-1">
-                  <button onClick={() => setStatsGen({...statsGen, goles: Math.max(0, statsGen.goles - 1)})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-green-900/50 shadow-sm text-green-600 hover:text-green-700 hover:bg-green-100 transition-colors"><Minus size={14}/></button>
-                  <input 
-                    type="number" 
-                    className="text-2xl font-black text-green-700 dark:text-green-500 bg-transparent w-16 text-center focus:outline-none focus:bg-white dark:focus:bg-green-900/50 rounded-lg transition-colors" 
-                    value={statsGen.goles}
-                    onChange={e => setStatsGen({...statsGen, goles: parseInt(e.target.value) || 0})}
-                  />
-                  <button onClick={() => setStatsGen({...statsGen, goles: statsGen.goles + 1})} className="w-6 h-6 rounded-full flex items-center justify-center bg-white dark:bg-green-900/50 shadow-sm text-green-600 hover:text-green-700 hover:bg-green-100 transition-colors"><Plus size={14}/></button>
-                </div>
-                <p className="text-xs text-green-600 dark:text-green-500 font-bold uppercase mt-2">Goles</p>
+              <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-2xl text-center border border-amber-200 dark:border-amber-800/50 flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {loadingStats ? (
+                  <Loader2 size={24} className="animate-spin text-amber-400 mb-1" />
+                ) : (
+                  <div className="flex items-end justify-center gap-1">
+                    <span className="text-3xl font-black text-amber-600 dark:text-amber-500 drop-shadow-sm">{autoStats.notaMedia}</span>
+                    <Star size={16} className="text-amber-500 fill-amber-500 mb-1.5" />
+                  </div>
+                )}
+                <p className="text-xs text-amber-600 dark:text-amber-500 font-bold uppercase mt-1">Nota Media</p>
               </div>
             </div>
 

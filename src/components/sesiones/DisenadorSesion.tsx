@@ -81,6 +81,7 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
       variables: '',
       roles: '',
       reflexion: '',
+      objetivo_individual: '',
       imagen_url: ''
     };
     setDatos(prev => ({ ...prev, tareas: [...prev.tareas, nuevaTarea] }));
@@ -285,6 +286,11 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
                       <label className="block text-sm font-medium mb-1">Pregunta Reflexión</label>
                       <input type="text" value={tarea.reflexion} onChange={e => updateTarea(index, 'reflexion', e.target.value)} placeholder="Ej: ¿Dónde hay superioridad?" className="w-full p-2 border rounded-lg dark:bg-neutral-950 dark:border-neutral-800" />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Objetivo Individual</label>
+                    <input type="text" value={tarea.objetivo_individual || ''} onChange={e => updateTarea(index, 'objetivo_individual', e.target.value)} placeholder="Ej: Que el extremo fije la marca..." className="w-full p-2 border rounded-lg dark:bg-neutral-950 dark:border-neutral-800" />
                   </div>
                 </div>
 

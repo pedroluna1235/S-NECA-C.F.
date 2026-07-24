@@ -124,11 +124,17 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
                     </div>
                   )}
                 </div>
-                <div className="w-64 border-l p-1 flex items-center justify-center" style={{ ...styles.borderBlack, ...styles.bgGreen }}>
+                <div className="w-64 border-l p-2 flex flex-col items-center justify-center gap-2" style={{ ...styles.borderBlack, ...styles.bgGreen }}>
                   {tarea.imagen_url ? (
-                    <img src={tarea.imagen_url} alt="Tarea" className="max-w-full max-h-48 object-contain" />
+                    <img src={tarea.imagen_url} alt="Tarea" className="max-w-full max-h-40 object-contain" />
                   ) : (
                     <span style={styles.textGray400}>Sin imagen</span>
+                  )}
+                  {tarea.objetivo_individual && (
+                    <div className="w-full mt-auto p-2 border text-xs text-center leading-snug" style={{ ...styles.borderBlack, ...styles.bgWhite }}>
+                      <span className="font-bold block mb-1">OBJETIVO INDIVIDUAL</span>
+                      <span className="font-medium">{tarea.objetivo_individual}</span>
+                    </div>
                   )}
                 </div>
               </div>

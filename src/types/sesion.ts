@@ -13,6 +13,7 @@ export interface TareaSesion {
   variables: string;
   roles: string;
   reflexion: string;
+  objetivo_individual?: string;
   imagen_url: string; // Base64 or uploaded URL
 }
 

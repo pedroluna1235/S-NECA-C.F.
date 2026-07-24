@@ -9,12 +9,13 @@ import { PlanPartidoTab } from './PlanPartidoTab';
 import { ABPTab } from './ABPTab';
 import { ConvocatoriaTab } from './ConvocatoriaTab';
 import { EventosTab } from './EventosTab';
+import { EvaluacionTab } from './EvaluacionTab';
 
 interface MatchTabsProps {
   match: Match;
 }
 
-type TabId = 'analisis_rival' | 'pizarra_tactica' | 'informe' | 'alineacion' | 'plan' | 'abp' | 'convocatoria' | 'eventos';
+type TabId = 'analisis_rival' | 'pizarra_tactica' | 'informe' | 'alineacion' | 'plan' | 'abp' | 'convocatoria' | 'eventos' | 'evaluacion';
 
 interface Tab {
   id: TabId;
@@ -30,6 +31,7 @@ const TABS: Tab[] = [
   { id: 'abp', label: 'ABP' },
   { id: 'convocatoria', label: 'Convocatoria' },
   { id: 'eventos', label: 'Eventos' },
+  { id: 'evaluacion', label: 'Evaluación' },
 ];
 
 export function MatchTabs({ match }: MatchTabsProps) {
@@ -72,6 +74,8 @@ export function MatchTabs({ match }: MatchTabsProps) {
         {activeTab === 'convocatoria' && <ConvocatoriaTab matchId={match.id} />}
         
         {activeTab === 'eventos' && <EventosTab matchId={match.id} />}
+        
+        {activeTab === 'evaluacion' && <EvaluacionTab matchId={match.id} />}
       </div>
     </div>
   );
