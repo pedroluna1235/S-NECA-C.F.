@@ -1,6 +1,6 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { 
-  Save, X, Download, Loader2, MousePointer2, Type, Play, Trash2, RotateCw
+  Save, X, Download, Loader2, MousePointer2, Type, Trash2, RotateCw
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
@@ -249,7 +249,7 @@ export function DiseñadorTarea({
   onClose: () => void 
 }) {
   const [titulo, setTitulo] = useState(initialData?.titulo || '');
-  const [descripcion, setDescripcion] = useState(initialData?.descripcion || '');
+  const [descripcion] = useState(initialData?.descripcion || '');
   
   const [fieldType, setFieldType] = useState<FieldType>(initialData?.configuracion_pizarra?.fieldType || 'F11');
   const [elements, setElements] = useState<CanvasElement[]>(initialData?.configuracion_pizarra?.elements || []);
@@ -258,8 +258,6 @@ export function DiseñadorTarea({
   const [exporting, setExporting] = useState(false);
   
   const [selectedTool, setSelectedTool] = useState<ElementType | 'pointer'>('pointer');
-  const [activeColor, setActiveColor] = useState('#ffffff');
-  
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   
   const pitchRef = useRef<HTMLDivElement>(null);
