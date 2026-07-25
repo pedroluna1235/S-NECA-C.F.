@@ -382,7 +382,7 @@ export function DiseñadorTarea({
 
     const newEl: CanvasElement = { 
       id: genId(), type: selectedTool as ElementType, x, y, 
-      color: activeColor, width: 30, height: 30, rotation: 0 
+      color: '#ffffff', width: 30, height: 30, rotation: 0 
     };
     
     switch (selectedTool) {
