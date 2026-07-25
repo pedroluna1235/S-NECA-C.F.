@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { 
-  Save, X, Download, Loader2, MousePointer2, Type, Trash2, RotateCw
+  Save, X, Download, Loader2, MousePointer2, Type, Trash2, RotateCw, Copy
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import toast from 'react-hot-toast';
@@ -550,6 +550,19 @@ export function DiseñadorTarea({
     if (selectedElementId === id) setSelectedElementId(null);
   };
 
+  const handleDuplicateElement = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const target = elements.find(el => el.id === id);
+    if (!target) return;
+    
+    const duplicateId = genId();
+    // Offset slightly so it doesn't overlap perfectly
+    const duplicate = { ...target, id: duplicateId, x: target.x + 2, y: target.y + 2 };
+    
+    setElements(prev => [...prev, duplicate]);
+    setSelectedElementId(duplicateId);
+  };
+
   const updateSelectedElement = (updates: Partial<CanvasElement>) => {
     if (!selectedElementId) return;
     setElements(elements.map(el => el.id === selectedElementId ? { ...el, ...updates } : el));
@@ -871,12 +884,20 @@ export function DiseñadorTarea({
               )}
              </div>
 
-            <button 
-              onClick={() => handleDeleteElement(selectedElement.id)}
-              className="flex items-center justify-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 text-sm py-2 rounded mt-2 transition-colors border border-red-900/50"
-            >
-              <Trash2 size={16} /> Eliminar
-            </button>
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <button 
+                onClick={() => handleDuplicateElement(selectedElement.id)}
+                className="flex items-center justify-center gap-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 text-sm py-2 rounded transition-colors border border-blue-900/50"
+              >
+                <Copy size={16} /> Duplicar
+              </button>
+              <button 
+                onClick={() => handleDeleteElement(selectedElement.id)}
+                className="flex items-center justify-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 text-sm py-2 rounded transition-colors border border-red-900/50"
+              >
+                <Trash2 size={16} /> Eliminar
+              </button>
+            </div>
           </div>
         )}
 
