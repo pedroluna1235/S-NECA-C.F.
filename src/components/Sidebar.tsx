@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, Shield, CalendarDays, Menu, X, Sun, Moon, BookOpen, Eye, LogOut } from 'lucide-react';
+import { Users, Shield, CalendarDays, Menu, X, Sun, Moon, BookOpen, Eye, LogOut, ClipboardList } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../contexts/AuthContext';
@@ -32,6 +32,7 @@ export function Sidebar() {
     { to: '/equipos', icon: Shield, label: 'Equipos' },
     { to: '/partidos', icon: CalendarDays, label: 'Partidos' },
     { to: '/sesiones', icon: BookOpen, label: 'Sesiones' },
+    { to: '/tareas', icon: ClipboardList, label: 'Tareas' },
     { to: '/scouting', icon: Eye, label: 'Scouting' },
   ];
 

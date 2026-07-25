@@ -5,6 +5,7 @@ import { Equipos } from './pages/Equipos';
 import { Partidos } from './pages/Partidos';
 import { PartidoDetalle } from './pages/PartidoDetalle';
 import { Sesiones } from './pages/Sesiones';
+import { Tareas } from './pages/Tareas';
 import { Scouting } from './pages/Scouting';
 
 import { AuthProvider } from './contexts/AuthContext';
@@ -25,6 +26,7 @@ function App() {
               <Route path="partidos" element={<Partidos />} />
               <Route path="partidos/:id" element={<PartidoDetalle />} />
               <Route path="sesiones" element={<Sesiones />} />
+              <Route path="tareas" element={<Tareas />} />
               <Route path="scouting" element={<Scouting />} />
             </Route>
           </Route>
