@@ -124,22 +124,20 @@ export function CalendarioSesiones({ sesiones, partidos = [], onSesionAdded }: C
               
               <div className="flex-1 overflow-y-auto flex flex-col gap-1 mt-1 scrollbar-hide">
                 {dayPartidos.map((partido) => {
-                  const matchTime = format(parseISO(partido.fecha), 'HH:mm');
                   return (
                     <div 
                       key={partido.id} 
-                      className="text-xs truncate bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md border border-blue-100 dark:border-blue-500/20 flex items-center gap-1.5"
-                      title={`${partido.tipo} vs ${partido.rival?.nombre || 'Rival'} - ${matchTime}`}
+                      className="text-xs truncate bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2 py-1.5 rounded-md border border-blue-100 dark:border-blue-500/20 flex items-center gap-2"
+                      title={`${partido.tipo} vs ${partido.rival?.nombre || 'Rival'}`}
                     >
                       {partido.rival?.escudo_url ? (
-                        <img src={partido.rival.escudo_url} alt={partido.rival.nombre} className="w-3.5 h-3.5 object-contain" />
+                        <img src={partido.rival.escudo_url} alt={partido.rival.nombre} className="w-5 h-5 object-contain shrink-0" />
                       ) : (
-                        <div className="w-3.5 h-3.5 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center text-[8px] font-bold">
+                        <div className="w-5 h-5 shrink-0 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center text-[10px] font-bold">
                           {partido.rival?.nombre?.charAt(0) || '?'}
                         </div>
                       )}
-                      <span className="font-semibold">{matchTime}</span>
-                      <span className="truncate flex-1">{partido.rival?.nombre || 'Rival'}</span>
+                      <span className="truncate flex-1 font-semibold">{partido.rival?.nombre || 'Rival'}</span>
                     </div>
                   );
                 })}
