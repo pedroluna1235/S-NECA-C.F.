@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Plantilla } from './pages/Plantilla';
+import { ModeloJuego } from './pages/ModeloJuego';
 import { Equipos } from './pages/Equipos';
 import { Partidos } from './pages/Partidos';
 import { PartidoDetalle } from './pages/PartidoDetalle';
@@ -22,6 +23,7 @@ function App() {
             <Route element={<Layout />}>
               <Route index element={<Navigate to="/plantilla" replace />} />
               <Route path="plantilla" element={<Plantilla />} />
+              <Route path="modelo-juego" element={<ModeloJuego />} />
               <Route path="equipos" element={<Equipos />} />
               <Route path="partidos" element={<Partidos />} />
               <Route path="partidos/:id" element={<PartidoDetalle />} />
