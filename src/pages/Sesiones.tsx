@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, List, BookOpen, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import type { Match } from '../components/MatchCard';
 import { CalendarioSesiones } from '../components/sesiones/CalendarioSesiones';
 import { HistorialSesiones } from '../components/sesiones/HistorialSesiones';
 import { HistorialAsistencia } from '../components/sesiones/HistorialAsistencia';
@@ -20,18 +21,22 @@ export type Sesion = {
 export function Sesiones() {
   const [activeTab, setActiveTab] = useState<'calendario' | 'historial' | 'asistencia' | 'disenar'>('calendario');
   const [sesiones, setSesiones] = useState<Sesion[]>([]);
+  const [partidos, setPartidos] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchSesiones = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('sesiones')
-        .select('*')
-        .order('fecha', { ascending: false });
+      const [sesionesResponse, partidosResponse] = await Promise.all([
+        supabase.from('sesiones').select('*').order('fecha', { ascending: false }),
+        supabase.from('partidos').select('*, rival:equipos(*)').order('fecha', { ascending: false })
+      ]);
 
-      if (error) throw error;
-      setSesiones(data || []);
+      if (sesionesResponse.error) throw sesionesResponse.error;
+      if (partidosResponse.error) throw partidosResponse.error;
+      
+      setSesiones(sesionesResponse.data || []);
+      setPartidos((partidosResponse.data as Match[]) || []);
     } catch (error) {
       console.error('Error fetching sesiones:', error);
     } finally {
@@ -114,6 +119,7 @@ export function Sesiones() {
         ) : activeTab === 'calendario' ? (
           <CalendarioSesiones 
             sesiones={sesiones} 
+            partidos={partidos}
             onSesionAdded={fetchSesiones} 
           />
         ) : activeTab === 'historial' ? (

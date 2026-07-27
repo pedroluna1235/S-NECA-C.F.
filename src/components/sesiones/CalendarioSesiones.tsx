@@ -17,13 +17,15 @@ import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ModalNuevaSesion } from './ModalNuevaSesion';
 import type { Sesion } from '../../pages/Sesiones';
+import type { Match } from '../MatchCard';
 
 interface CalendarioSesionesProps {
   sesiones: Sesion[];
+  partidos?: Match[];
   onSesionAdded: () => void;
 }
 
-export function CalendarioSesiones({ sesiones, onSesionAdded }: CalendarioSesionesProps) {
+export function CalendarioSesiones({ sesiones, partidos = [], onSesionAdded }: CalendarioSesionesProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,6 +50,10 @@ export function CalendarioSesiones({ sesiones, onSesionAdded }: CalendarioSesion
 
   const getSesionesParaDia = (day: Date) => {
     return sesiones.filter(s => isSameDay(parseISO(s.fecha), day));
+  };
+
+  const getPartidosParaDia = (day: Date) => {
+    return partidos.filter(p => isSameDay(parseISO(p.fecha), day));
   };
 
   return (
@@ -86,7 +92,8 @@ export function CalendarioSesiones({ sesiones, onSesionAdded }: CalendarioSesion
       <div className="grid grid-cols-7 gap-1 sm:gap-2 flex-1">
         {days.map((day, i) => {
           const daySesiones = getSesionesParaDia(day);
-          const hasSesiones = daySesiones.length > 0;
+          const dayPartidos = getPartidosParaDia(day);
+          const hasEventos = daySesiones.length > 0 || dayPartidos.length > 0;
           const isCurrentMonth = isSameMonth(day, monthStart);
 
           return (
@@ -107,7 +114,7 @@ export function CalendarioSesiones({ sesiones, onSesionAdded }: CalendarioSesion
                   {format(day, 'd')}
                 </span>
                 
-                {hasSesiones && (
+                {hasEventos && (
                   <span className="flex h-2 w-2 relative">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -115,7 +122,27 @@ export function CalendarioSesiones({ sesiones, onSesionAdded }: CalendarioSesion
                 )}
               </div>
               
-              <div className="flex-1 overflow-hidden flex flex-col gap-1 mt-1">
+              <div className="flex-1 overflow-y-auto flex flex-col gap-1 mt-1 scrollbar-hide">
+                {dayPartidos.map((partido) => {
+                  const matchTime = format(parseISO(partido.fecha), 'HH:mm');
+                  return (
+                    <div 
+                      key={partido.id} 
+                      className="text-xs truncate bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md border border-blue-100 dark:border-blue-500/20 flex items-center gap-1.5"
+                      title={`${partido.tipo} vs ${partido.rival?.nombre || 'Rival'} - ${matchTime}`}
+                    >
+                      {partido.rival?.escudo_url ? (
+                        <img src={partido.rival.escudo_url} alt={partido.rival.nombre} className="w-3.5 h-3.5 object-contain" />
+                      ) : (
+                        <div className="w-3.5 h-3.5 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center text-[8px] font-bold">
+                          {partido.rival?.nombre?.charAt(0) || '?'}
+                        </div>
+                      )}
+                      <span className="font-semibold">{matchTime}</span>
+                      <span className="truncate flex-1">{partido.rival?.nombre || 'Rival'}</span>
+                    </div>
+                  );
+                })}
                 {daySesiones.map((sesion) => (
                   <div 
                     key={sesion.id} 
