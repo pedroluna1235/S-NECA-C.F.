@@ -16,6 +16,7 @@ export type Sesion = {
   observaciones?: string;
   asistentes?: string[];
   created_at: string;
+  datos_diseno?: import('../types/sesion').DatosDisenoSesion;
 };
 
 export function Sesiones() {

@@ -108,6 +108,15 @@ export function HistorialSesiones({ sesiones, onSesionDeleted }: HistorialSesion
               <span className="capitalize">{fechaFormat}</span>
             </div>
 
+            {sesion.datos_diseno?.cabecera?.principios && (
+              <div className="mb-4">
+                <span className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider block mb-1">Principios Trabajados</span>
+                <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                  {sesion.datos_diseno.cabecera.principios}
+                </p>
+              </div>
+            )}
+
             {sesion.observaciones && (
               <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm text-neutral-600 dark:text-neutral-400 italic flex-1 overflow-y-auto">
                 {sesion.observaciones}
