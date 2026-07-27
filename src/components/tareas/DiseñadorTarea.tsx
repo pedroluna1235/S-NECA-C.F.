@@ -649,7 +649,8 @@ export function DiseñadorTarea({
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center relative overflow-hidden bg-neutral-900 p-4 pb-28">
+      <main className="flex-1 flex flex-col xl:flex-row relative overflow-hidden bg-neutral-900">
+        <div className="flex-1 flex items-center justify-center relative overflow-hidden p-4 pb-32 xl:pb-6">
         
         <div 
           ref={pitchRef}
@@ -826,81 +827,6 @@ export function DiseñadorTarea({
           })}
         </div>
 
-        {/* Floating Property Panel for Selected Element */}
-        {selectedElement && (
-          <div className="absolute right-6 top-6 bg-neutral-800 p-4 rounded-2xl shadow-xl border border-neutral-700 flex flex-col gap-4 min-w-[240px] z-50">
-            <h3 className="text-white text-sm font-bold uppercase tracking-wider">Propiedades</h3>
-            
-            {/* Color Picker */}
-            {['player', 'cone', 'hoop', 'mannequin', 'fitball', 'hurdle', 'shape', 'text', 'pole', 'line', 'arrow'].includes(selectedElement.type) && (
-              <div className="flex flex-wrap gap-2">
-                {['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#eab308', '#f97316', '#a855f7', '#171717', '#ffffff'].map(c => (
-                  <button 
-                    key={c}
-                    onClick={() => updateSelectedElement({ color: c })}
-                    className={`w-6 h-6 rounded-full border-2 ${selectedElement.color === c ? 'border-white scale-110' : 'border-transparent'}`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-            )}
-            
-            {/* Number/Text Input */}
-            {['player', 'text'].includes(selectedElement.type) && (
-              <div>
-                 <label className="text-xs text-neutral-400 mb-1 block">
-                   {selectedElement.type === 'player' ? 'Número' : 'Texto'}
-                 </label>
-                 <input 
-                   type="text" 
-                   value={selectedElement.label || ''}
-                   onChange={(e) => updateSelectedElement({ label: e.target.value })}
-                   maxLength={selectedElement.type === 'player' ? 3 : 50}
-                   className="w-full bg-neutral-900 border border-neutral-700 rounded p-1.5 text-white text-sm focus:outline-none focus:border-neutral-500"
-                 />
-              </div>
-            )}
-
-            {/* Shape options */}
-            {selectedElement.type === 'shape' && (
-              <div className="flex gap-2 bg-neutral-900 p-1 rounded-lg">
-                <button onClick={() => updateSelectedElement({ shapeType: 'rect' })} className={`flex-1 p-1 rounded text-xs font-bold ${selectedElement.shapeType === 'rect' ? 'bg-neutral-700 text-white' : 'text-neutral-400'}`}>Rect</button>
-                <button onClick={() => updateSelectedElement({ shapeType: 'circle' })} className={`flex-1 p-1 rounded text-xs font-bold ${selectedElement.shapeType === 'circle' ? 'bg-neutral-700 text-white' : 'text-neutral-400'}`}>Circ</button>
-                <button onClick={() => updateSelectedElement({ shapeType: 'triangle' })} className={`flex-1 p-1 rounded text-xs font-bold ${selectedElement.shapeType === 'triangle' ? 'bg-neutral-700 text-white' : 'text-neutral-400'}`}>Trian</button>
-              </div>
-            )}
-            
-            {(selectedElement.type === 'shape' || selectedElement.type === 'line' || selectedElement.type === 'arrow') && (
-               <button onClick={() => updateSelectedElement({ isDashed: !selectedElement.isDashed })} className={`w-full py-1.5 rounded text-xs font-bold ${selectedElement.isDashed ? 'bg-neutral-700 text-white' : 'bg-neutral-900 text-neutral-400'}`}>{selectedElement.type === 'shape' ? 'Borde Punteado' : 'Línea Punteada'}</button>
-            )}
-
-             {/* Rotation */}
-             <div className="space-y-3">
-              {selectedElement.type !== 'line' && selectedElement.type !== 'arrow' && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-neutral-400 w-12 flex items-center gap-1"><RotateCw size={12}/> Giro</span>
-                  <input type="range" min="0" max="360" value={selectedElement.rotation || 0} onChange={(e) => updateSelectedElement({ rotation: parseInt(e.target.value) })} className="flex-1 accent-blue-500" />
-                </div>
-              )}
-             </div>
-
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              <button 
-                onClick={() => handleDuplicateElement(selectedElement.id)}
-                className="flex items-center justify-center gap-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 text-sm py-2 rounded transition-colors border border-blue-900/50"
-              >
-                <Copy size={16} /> Duplicar
-              </button>
-              <button 
-                onClick={() => handleDeleteElement(selectedElement.id)}
-                className="flex items-center justify-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 text-sm py-2 rounded transition-colors border border-red-900/50"
-              >
-                <Trash2 size={16} /> Eliminar
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Floating Bottom Toolbar (Dock) */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-neutral-800/90 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-neutral-700 flex items-center gap-1 z-50 overflow-x-auto max-w-full">
           
@@ -980,6 +906,87 @@ export function DiseñadorTarea({
 
         </div>
 
+              </div>
+
+        {/* Floating Property Panel for Selected Element */}
+        {selectedElement && (
+          <div className="xl:w-80 w-full bg-neutral-800 border-t xl:border-t-0 xl:border-l border-neutral-700 shadow-2xl p-4 shrink-0 overflow-y-auto max-h-[35vh] xl:max-h-none z-50 flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-white text-sm font-bold uppercase tracking-wider">Propiedades</h3>
+              <button onClick={() => setSelectedElementId(null)} className="text-neutral-400 hover:text-white xl:hidden p-1 hover:bg-neutral-700 rounded transition-colors"><X size={16}/></button>
+            </div>
+            
+            {/* Color Picker */}
+            {['player', 'cone', 'hoop', 'mannequin', 'fitball', 'hurdle', 'shape', 'text', 'pole', 'line', 'arrow'].includes(selectedElement.type) && (
+              <div className="flex flex-wrap gap-2">
+                {['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#eab308', '#f97316', '#a855f7', '#171717', '#ffffff'].map(c => (
+                  <button 
+                    key={c}
+                    onClick={() => updateSelectedElement({ color: c })}
+                    className={`w-6 h-6 rounded-full border-2 ${selectedElement.color === c ? 'border-white scale-110' : 'border-transparent'}`}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {/* Number/Text Input */}
+            {['player', 'text'].includes(selectedElement.type) && (
+              <div>
+                 <label className="text-xs text-neutral-400 mb-1 block">
+                   {selectedElement.type === 'player' ? 'Número' : 'Texto'}
+                 </label>
+                 <input 
+                   type="text" 
+                   value={selectedElement.label || ''}
+                   onChange={(e) => updateSelectedElement({ label: e.target.value })}
+                   maxLength={selectedElement.type === 'player' ? 3 : 50}
+                   className="w-full bg-neutral-900 border border-neutral-700 rounded p-1.5 text-white text-sm focus:outline-none focus:border-neutral-500"
+                 />
+              </div>
+            )}
+
+            {/* Shape options */}
+            {selectedElement.type === 'shape' && (
+              <div className="flex gap-2 bg-neutral-900 p-1 rounded-lg">
+                <button onClick={() => updateSelectedElement({ shapeType: 'rect' })} className={`flex-1 p-1 rounded text-xs font-bold ${selectedElement.shapeType === 'rect' ? 'bg-neutral-700 text-white' : 'text-neutral-400'}`}>Rect</button>
+                <button onClick={() => updateSelectedElement({ shapeType: 'circle' })} className={`flex-1 p-1 rounded text-xs font-bold ${selectedElement.shapeType === 'circle' ? 'bg-neutral-700 text-white' : 'text-neutral-400'}`}>Circ</button>
+                <button onClick={() => updateSelectedElement({ shapeType: 'triangle' })} className={`flex-1 p-1 rounded text-xs font-bold ${selectedElement.shapeType === 'triangle' ? 'bg-neutral-700 text-white' : 'text-neutral-400'}`}>Trian</button>
+              </div>
+            )}
+            
+            {(selectedElement.type === 'shape' || selectedElement.type === 'line' || selectedElement.type === 'arrow') && (
+               <button onClick={() => updateSelectedElement({ isDashed: !selectedElement.isDashed })} className={`w-full py-1.5 rounded text-xs font-bold ${selectedElement.isDashed ? 'bg-neutral-700 text-white' : 'bg-neutral-900 text-neutral-400'}`}>{selectedElement.type === 'shape' ? 'Borde Punteado' : 'Línea Punteada'}</button>
+            )}
+
+             {/* Rotation */}
+             <div className="space-y-3">
+              {selectedElement.type !== 'line' && selectedElement.type !== 'arrow' && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-neutral-400 w-12 flex items-center gap-1"><RotateCw size={12}/> Giro</span>
+                  <input type="range" min="0" max="360" value={selectedElement.rotation || 0} onChange={(e) => updateSelectedElement({ rotation: parseInt(e.target.value) })} className="flex-1 accent-blue-500" />
+                </div>
+              )}
+             </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <button 
+                onClick={() => handleDuplicateElement(selectedElement.id)}
+                className="flex items-center justify-center gap-2 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 text-sm py-2 rounded transition-colors border border-blue-900/50"
+              >
+                <Copy size={16} /> Duplicar
+              </button>
+              <button 
+                onClick={() => handleDeleteElement(selectedElement.id)}
+                className="flex items-center justify-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-900/30 text-sm py-2 rounded transition-colors border border-red-900/50"
+              >
+                <Trash2 size={16} /> Eliminar
+              </button>
+            </div>
+          </div>
+        )}
+
+        
       </main>
       <style>{`
         .clip-half-right {
