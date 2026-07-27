@@ -23,7 +23,7 @@ type CanvasElement = {
   color?: string;
   label?: string;      
   rotation?: number;
-  shapeType?: 'rect' | 'circle' | 'triangle';
+  shapeType?: 'rect' | 'circle' | 'triangle' | 'pentagon' | 'hexagon';
   isDashed?: boolean;
 };
 
@@ -800,12 +800,17 @@ export function DiseñadorTarea({
             } else if (el.type === 'text') {
               elementContent = <div className="w-full h-full font-bold drop-shadow-md whitespace-nowrap" style={{ color: el.color || '#ffffff', fontSize: `${height}px` }}>{el.label || 'Texto'}</div>;
             } else if (el.type === 'shape') {
-              if (el.shapeType === 'triangle') {
-                 elementContent = <div className="w-full h-full" style={{
-                    clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-                    backgroundColor: el.isDashed ? 'transparent' : (el.color || '#ffffff'),
-                    borderBottom: el.isDashed ? `4px dashed ${el.color || '#ffffff'}` : 'none'
-                 }}><svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none"><polygon points="50,0 0,100 100,100" fill={el.isDashed ? 'none' : (el.color || '#ffffff')} stroke={el.color || '#ffffff'} strokeWidth="4" strokeDasharray={el.isDashed ? "8,8" : "none"} vectorEffect="non-scaling-stroke" /></svg></div>;
+              if (el.shapeType === 'triangle' || el.shapeType === 'pentagon' || el.shapeType === 'hexagon') {
+                 let clipPath = '';
+                 let points = '';
+                 if (el.shapeType === 'triangle') { clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)'; points = '50,0 0,100 100,100'; }
+                 else if (el.shapeType === 'pentagon') { clipPath = 'polygon(50% 0%, 100% 38%, 81% 100%, 19% 100%, 0% 38%)'; points = '50,0 100,38 81,100 19,100 0,38'; }
+                 else if (el.shapeType === 'hexagon') { clipPath = 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'; points = '50,0 100,25 100,75 50,100 0,75 0,25'; }
+
+                 elementContent = <div className="w-full h-full relative" style={{
+                    clipPath,
+                    backgroundColor: el.isDashed ? 'transparent' : (el.color || '#ffffff')
+                 }}><svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none"><polygon points={points} fill={el.isDashed ? 'none' : (el.color || '#ffffff')} stroke={el.color || '#ffffff'} strokeWidth="4" strokeDasharray={el.isDashed ? "8,8" : "none"} vectorEffect="non-scaling-stroke" /></svg></div>;
               } else {
                  elementContent = <div className={`w-full h-full ${el.shapeType === 'circle' ? 'rounded-full' : ''} border-[4px] ${el.isDashed ? 'border-dashed' : ''} bg-opacity-30`} style={{ borderColor: el.color || '#ffffff', backgroundColor: el.isDashed ? 'transparent' : (el.color || '#ffffff') }} />;
               }
@@ -951,10 +956,12 @@ export function DiseñadorTarea({
 
             {/* Shape options */}
             {selectedElement.type === 'shape' && (
-              <div className="flex gap-2 bg-neutral-900 p-1 rounded-lg">
-                <button onClick={() => updateSelectedElement({ shapeType: 'rect' })} className={`flex-1 p-1 rounded text-xs font-bold ${selectedElement.shapeType === 'rect' ? 'bg-neutral-700 text-white' : 'text-neutral-400'}`}>Rect</button>
-                <button onClick={() => updateSelectedElement({ shapeType: 'circle' })} className={`flex-1 p-1 rounded text-xs font-bold ${selectedElement.shapeType === 'circle' ? 'bg-neutral-700 text-white' : 'text-neutral-400'}`}>Circ</button>
-                <button onClick={() => updateSelectedElement({ shapeType: 'triangle' })} className={`flex-1 p-1 rounded text-xs font-bold ${selectedElement.shapeType === 'triangle' ? 'bg-neutral-700 text-white' : 'text-neutral-400'}`}>Trian</button>
+              <div className="flex flex-wrap gap-2 bg-neutral-900 p-2 rounded-lg">
+                <button onClick={() => updateSelectedElement({ shapeType: 'rect' })} className={`flex-1 min-w-[3rem] p-1.5 rounded text-[10px] font-bold ${selectedElement.shapeType === 'rect' ? 'bg-neutral-700 text-white' : 'text-neutral-400 hover:bg-neutral-800'}`}>Rect</button>
+                <button onClick={() => updateSelectedElement({ shapeType: 'circle' })} className={`flex-1 min-w-[3rem] p-1.5 rounded text-[10px] font-bold ${selectedElement.shapeType === 'circle' ? 'bg-neutral-700 text-white' : 'text-neutral-400 hover:bg-neutral-800'}`}>Circ</button>
+                <button onClick={() => updateSelectedElement({ shapeType: 'triangle' })} className={`flex-1 min-w-[3rem] p-1.5 rounded text-[10px] font-bold ${selectedElement.shapeType === 'triangle' ? 'bg-neutral-700 text-white' : 'text-neutral-400 hover:bg-neutral-800'}`}>Trian</button>
+                <button onClick={() => updateSelectedElement({ shapeType: 'pentagon' })} className={`flex-1 min-w-[3rem] p-1.5 rounded text-[10px] font-bold ${selectedElement.shapeType === 'pentagon' ? 'bg-neutral-700 text-white' : 'text-neutral-400 hover:bg-neutral-800'}`}>Pent</button>
+                <button onClick={() => updateSelectedElement({ shapeType: 'hexagon' })} className={`flex-1 min-w-[3rem] p-1.5 rounded text-[10px] font-bold ${selectedElement.shapeType === 'hexagon' ? 'bg-neutral-700 text-white' : 'text-neutral-400 hover:bg-neutral-800'}`}>Hex</button>
               </div>
             )}
             
