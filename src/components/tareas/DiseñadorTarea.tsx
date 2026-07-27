@@ -810,7 +810,7 @@ export function DiseñadorTarea({
                  elementContent = <div className="w-full h-full relative" style={{
                     clipPath,
                     backgroundColor: el.isDashed ? 'transparent' : (el.color || '#ffffff')
-                 }}><svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none"><polygon points={points} fill={el.isDashed ? 'none' : (el.color || '#ffffff')} stroke={el.color || '#ffffff'} strokeWidth="4" strokeDasharray={el.isDashed ? "8,8" : "none"} vectorEffect="non-scaling-stroke" /></svg></div>;
+                 }}><svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none"><polygon points={points} fill={el.isDashed ? 'none' : (el.color || '#ffffff')} stroke={el.color || '#ffffff'} strokeWidth="4" strokeDasharray={el.isDashed ? "8,8" : "none"} vectorEffect="non-scaling-stroke" /></svg></div>;
               } else {
                  elementContent = <div className={`w-full h-full ${el.shapeType === 'circle' ? 'rounded-full' : ''} border-[4px] ${el.isDashed ? 'border-dashed' : ''} bg-opacity-30`} style={{ borderColor: el.color || '#ffffff', backgroundColor: el.isDashed ? 'transparent' : (el.color || '#ffffff') }} />;
               }
