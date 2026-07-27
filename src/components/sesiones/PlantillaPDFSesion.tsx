@@ -179,9 +179,9 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
                     <div key={sesionInd.id} className="text-xs">
                       <div className="font-bold">{sesionInd.nombres.toUpperCase()}</div>
                       <div className="flex flex-wrap gap-1 mt-0.5">
-                        {sesionInd.video && <span className="bg-blue-100 text-blue-800 px-1 py-0.5 rounded text-[9px] font-semibold border border-blue-200">VÍDEO</span>}
-                        {sesionInd.entrenamiento && <span className="bg-green-100 text-green-800 px-1 py-0.5 rounded text-[9px] font-semibold border border-green-200">ENTRENO</span>}
-                        {sesionInd.charla && <span className="bg-purple-100 text-purple-800 px-1 py-0.5 rounded text-[9px] font-semibold border border-purple-200">CHARLA</span>}
+                        {sesionInd.video && <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', borderColor: '#BFDBFE' }} className="px-1 py-0.5 rounded text-[9px] font-semibold border">VÍDEO</span>}
+                        {sesionInd.entrenamiento && <span style={{ backgroundColor: '#DCFCE7', color: '#166534', borderColor: '#BBF7D0' }} className="px-1 py-0.5 rounded text-[9px] font-semibold border">ENTRENO</span>}
+                        {sesionInd.charla && <span style={{ backgroundColor: '#F3E8FF', color: '#6B21A8', borderColor: '#E9D5FF' }} className="px-1 py-0.5 rounded text-[9px] font-semibold border">CHARLA</span>}
                       </div>
                     </div>
                   ))}
