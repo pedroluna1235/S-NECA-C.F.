@@ -650,9 +650,11 @@ export function DiseñadorTarea({
       </header>
 
       <main className="flex-1 flex flex-col xl:flex-row relative overflow-hidden bg-neutral-900">
-        <div className="flex-1 flex items-center justify-center relative overflow-hidden p-4 pb-32 xl:pb-6">
+        <div className="flex-1 flex flex-col items-center justify-center overflow-hidden p-4 gap-4 xl:gap-6">
         
+        <div className="flex-1 w-full flex items-center justify-center min-h-0 relative">
         <div 
+
           ref={pitchRef}
           onClick={handlePitchClick}
           onPointerMove={handlePointerMove}
@@ -826,9 +828,10 @@ export function DiseñadorTarea({
             );
           })}
         </div>
+        </div>
 
         {/* Floating Bottom Toolbar (Dock) */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-neutral-800/90 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-neutral-700 flex items-center gap-1 z-50 overflow-x-auto max-w-full">
+        <div className="bg-neutral-800/90 backdrop-blur-md p-2 rounded-2xl shadow-2xl border border-neutral-700 flex items-center gap-1 z-50 overflow-x-auto max-w-full shrink-0">
           
           <ToolBtn icon={<MousePointer2 size={24} />} tool="pointer" current={selectedTool} set={setSelectedTool} title="Seleccionar/Mover" label="Mover" />
           <div className="w-px h-8 bg-neutral-700 mx-1 shrink-0"></div>
