@@ -113,6 +113,11 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
                       <span className="font-bold italic">Variables:</span> <span className="italic">{tarea.variables}</span>
                     </div>
                   )}
+                  {tarea.responsabilidades && (
+                    <div className="mt-3" style={styles.textGray700}>
+                      <span className="font-bold italic">Responsabilidades:</span> <span className="italic">{tarea.responsabilidades}</span>
+                    </div>
+                  )}
                   {tarea.roles && (
                     <div className="mt-3" style={styles.textGray700}>
                       <span className="font-bold">Roles CT:</span> {tarea.roles}

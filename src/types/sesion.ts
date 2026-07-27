@@ -11,6 +11,7 @@ export interface TareaSesion {
   equipos: string;
   descripcion: string;
   variables: string;
+  responsabilidades?: string;
   roles: string;
   reflexion: string;
   objetivo_individual?: string;

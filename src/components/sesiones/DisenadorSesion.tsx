@@ -277,6 +277,11 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
                     </div>
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Responsabilidades</label>
+                    <input type="text" value={tarea.responsabilidades || ''} onChange={e => updateTarea(index, 'responsabilidades', e.target.value)} placeholder="Ej: Laterales cierran dentro, centrales fijan..." className="w-full p-2 border rounded-lg dark:bg-neutral-950 dark:border-neutral-800" />
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">Roles CT</label>
