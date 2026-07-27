@@ -768,7 +768,9 @@ export function DiseñadorTarea({
               transform: `rotate(${el.rotation || 0}deg)`
             };
             
-            const commonClasses = `absolute flex items-center justify-center touch-none ${selectedTool === 'pointer' ? 'cursor-grab active:cursor-grabbing' : ''} ${isSelected ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-transparent z-20' : 'z-10'}`;
+            const baseZ = el.type === 'shape' ? 'z-0' : 'z-10';
+            const selectedZ = el.type === 'shape' ? 'z-5' : 'z-20';
+            const commonClasses = `absolute flex items-center justify-center touch-none ${selectedTool === 'pointer' ? 'cursor-grab active:cursor-grabbing' : ''} ${isSelected ? `ring-2 ring-blue-500 ring-offset-2 ring-offset-transparent ${selectedZ}` : baseZ}`;
 
             let elementContent = null;
             if (el.type === 'player') {
