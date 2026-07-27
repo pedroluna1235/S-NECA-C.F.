@@ -46,9 +46,18 @@ export interface CabeceraSesion {
   sesionNum: string;
 }
 
+export interface SesionIndividual {
+  id: string;
+  nombres: string;
+  video: boolean;
+  entrenamiento: boolean;
+  charla: boolean;
+}
+
 export interface DatosDisenoSesion {
   cabecera: CabeceraSesion;
   material: MaterialSesion;
   tareas: TareaSesion[];
   jugadores: JugadorSesion[];
+  sesionesIndividuales: SesionIndividual[];
 }

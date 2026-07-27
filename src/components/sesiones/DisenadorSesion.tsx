@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Plus, Trash2, Save, ImageIcon, Calendar } from 'lucide-react';
+import { Loader2, Plus, Trash2, Save, ImageIcon, Calendar, Users } from 'lucide-react';
 import type { DatosDisenoSesion, TareaSesion } from '../../types/sesion';
 import { PlantillaPDFSesion } from './PlantillaPDFSesion';
 import { generateAndUploadPDF } from '../../lib/pdfGenerator';
@@ -38,7 +38,8 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
       porterias: 0
     },
     tareas: [],
-    jugadores: []
+    jugadores: [],
+    sesionesIndividuales: []
   });
 
   useEffect(() => {
@@ -97,6 +98,29 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
     const nuevasTareas = [...datos.tareas];
     nuevasTareas.splice(index, 1);
     setDatos(prev => ({ ...prev, tareas: nuevasTareas }));
+  };
+
+  const addSesionIndividual = () => {
+    const nueva: import('../../types/sesion').SesionIndividual = {
+      id: Date.now().toString(),
+      nombres: '',
+      video: false,
+      entrenamiento: false,
+      charla: false
+    };
+    setDatos(prev => ({ ...prev, sesionesIndividuales: [...(prev.sesionesIndividuales || []), nueva] }));
+  };
+
+  const updateSesionIndividual = (index: number, campo: keyof import('../../types/sesion').SesionIndividual, valor: any) => {
+    const nuevas = [...(datos.sesionesIndividuales || [])];
+    nuevas[index] = { ...nuevas[index], [campo]: valor };
+    setDatos(prev => ({ ...prev, sesionesIndividuales: nuevas }));
+  };
+
+  const removeSesionIndividual = (index: number) => {
+    const nuevas = [...(datos.sesionesIndividuales || [])];
+    nuevas.splice(index, 1);
+    setDatos(prev => ({ ...prev, sesionesIndividuales: nuevas }));
   };
 
   const handleImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,6 +223,56 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
              <label className="block text-sm font-medium mb-1">Microciclo</label>
              <input type="text" value={datos.cabecera.microcicloNum} onChange={e => setDatos(d => ({...d, cabecera: {...d.cabecera, microcicloNum: e.target.value}}))} className="w-full p-2 border rounded-lg dark:bg-neutral-950 dark:border-neutral-800" />
           </div>
+        </div>
+      </div>
+
+      {/* SESIÓN INDIVIDUAL */}
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold flex items-center gap-2"><Users className="text-red-500" /> Sesión Individual</h3>
+          <button 
+            onClick={addSesionIndividual}
+            className="flex items-center gap-2 bg-red-100 text-red-600 px-3 py-1.5 rounded-lg font-medium hover:bg-red-200 transition-colors text-sm"
+          >
+            <Plus size={16} /> Añadir
+          </button>
+        </div>
+        
+        {(!datos.sesionesIndividuales || datos.sesionesIndividuales.length === 0) && (
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 italic">No hay sesiones individuales programadas.</p>
+        )}
+
+        <div className="space-y-3">
+          {datos.sesionesIndividuales?.map((sesionInd, idx) => (
+            <div key={sesionInd.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-3 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50 dark:bg-neutral-950">
+              <div className="flex-1 w-full">
+                <input 
+                  type="text" 
+                  value={sesionInd.nombres} 
+                  onChange={e => updateSesionIndividual(idx, 'nombres', e.target.value)} 
+                  placeholder="Nombre del jugador o jugadores..." 
+                  className="w-full p-2 text-sm border rounded-lg bg-white dark:bg-neutral-900 dark:border-neutral-700" 
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-4">
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="checkbox" checked={sesionInd.video} onChange={e => updateSesionIndividual(idx, 'video', e.target.checked)} className="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
+                  Vídeo
+                </label>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="checkbox" checked={sesionInd.entrenamiento} onChange={e => updateSesionIndividual(idx, 'entrenamiento', e.target.checked)} className="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
+                  Entrenamiento
+                </label>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="checkbox" checked={sesionInd.charla} onChange={e => updateSesionIndividual(idx, 'charla', e.target.checked)} className="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
+                  Charla
+                </label>
+              </div>
+              <button onClick={() => removeSesionIndividual(idx)} className="p-1.5 text-neutral-400 hover:text-red-500 transition-colors">
+                <Trash2 size={18} />
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 

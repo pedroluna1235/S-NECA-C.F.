@@ -169,6 +169,25 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
                 ))}
               </div>
             </div>
+
+            {/* SESIONES INDIVIDUALES */}
+            {datos.sesionesIndividuales && datos.sesionesIndividuales.length > 0 && (
+              <div className="border mt-4" style={styles.borderBlack}>
+                <div className="border-b p-1 font-bold text-center" style={{ ...styles.borderBlack, ...styles.bgGray }}>SESIÓN INDIVIDUAL</div>
+                <div className="flex flex-col p-1.5 gap-1.5" style={styles.bgWhite}>
+                  {datos.sesionesIndividuales.map((sesionInd) => (
+                    <div key={sesionInd.id} className="text-xs">
+                      <div className="font-bold">{sesionInd.nombres.toUpperCase()}</div>
+                      <div className="flex flex-wrap gap-1 mt-0.5">
+                        {sesionInd.video && <span className="bg-blue-100 text-blue-800 px-1 py-0.5 rounded text-[9px] font-semibold border border-blue-200">VÍDEO</span>}
+                        {sesionInd.entrenamiento && <span className="bg-green-100 text-green-800 px-1 py-0.5 rounded text-[9px] font-semibold border border-green-200">ENTRENO</span>}
+                        {sesionInd.charla && <span className="bg-purple-100 text-purple-800 px-1 py-0.5 rounded text-[9px] font-semibold border border-purple-200">CHARLA</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
