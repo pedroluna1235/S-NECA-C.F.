@@ -250,6 +250,7 @@ export function DiseñadorTarea({
 }) {
   const [titulo, setTitulo] = useState(initialData?.titulo || '');
   const [descripcion] = useState(initialData?.descripcion || '');
+  const [tipo, setTipo] = useState(initialData?.configuracion_pizarra?.tipo || 'Activación');
   
   const [fieldType, setFieldType] = useState<FieldType>(initialData?.configuracion_pizarra?.fieldType || 'F11');
   const [elements, setElements] = useState<CanvasElement[]>(initialData?.configuracion_pizarra?.elements || []);
@@ -347,7 +348,7 @@ export function DiseñadorTarea({
       const payload = {
         titulo,
         descripcion,
-        configuracion_pizarra: { fieldType, elements, thumbnail }
+        configuracion_pizarra: { fieldType, elements, thumbnail, tipo }
       };
 
       if (initialData?.id) {
@@ -616,6 +617,22 @@ export function DiseñadorTarea({
               onChange={(e) => setTitulo(e.target.value)}
               className="w-full text-xl font-bold bg-transparent border-none focus:outline-none focus:ring-0 text-white placeholder:text-neutral-500"
             />
+            <select
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value)}
+              className="bg-neutral-800 border-none rounded-lg text-sm px-3 py-1 text-white w-fit"
+            >
+              <option value="Activación">Activación</option>
+              <option value="Rondo">Rondo</option>
+              <option value="Posesión">Posesión</option>
+              <option value="Juego lúdico">Juego lúdico</option>
+              <option value="Juego de posición">Juego de posición</option>
+              <option value="Físico">Físico</option>
+              <option value="Minipartidos">Minipartidos</option>
+              <option value="ABP">ABP</option>
+              <option value="Finalizaciones">Finalizaciones</option>
+              <option value="Partidos Modificados">Partidos Modificados</option>
+            </select>
             <select 
                 value={fieldType} 
                 onChange={(e) => setFieldType(e.target.value as FieldType)}

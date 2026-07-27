@@ -17,6 +17,27 @@ export function Tareas() {
   const [loading, setLoading] = useState(true);
   const [isDesigning, setIsDesigning] = useState(false);
   const [editingTarea, setEditingTarea] = useState<Tarea | null>(null);
+  const [filtroTipo, setFiltroTipo] = useState<string>('Todas');
+
+  const TIPOS_TAREA = [
+    'Todas',
+    'Activación',
+    'Rondo',
+    'Posesión',
+    'Juego lúdico',
+    'Juego de posición',
+    'Físico',
+    'Minipartidos',
+    'ABP',
+    'Finalizaciones',
+    'Partidos Modificados'
+  ];
+
+  const tareasFiltradas = tareas.filter(tarea => {
+    if (filtroTipo === 'Todas') return true;
+    const tipo = tarea.configuracion_pizarra?.tipo || 'Activación'; // default to Activación if not present
+    return tipo === filtroTipo;
+  });
 
   const fetchTareas = async () => {
     try {
@@ -105,8 +126,8 @@ export function Tareas() {
             <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
           </div>
         ) : tareas.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="flex flex-col items-center justify-center h-[60vh] text-center bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm p-8">
+            <div className="w-20 h-20 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mb-6">
               <ClipboardList className="w-10 h-10 text-neutral-400" />
             </div>
             <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">No hay tareas creadas</h3>
@@ -120,39 +141,64 @@ export function Tareas() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {tareas.map((tarea) => (
-              <div 
-                key={tarea.id}
-                onClick={() => handleEdit(tarea)}
-                className="group relative bg-neutral-50 dark:bg-neutral-800/50 rounded-xl p-5 border border-neutral-200 dark:border-neutral-800 hover:border-red-500/50 dark:hover:border-red-500/50 cursor-pointer transition-all hover:shadow-md"
-              >
+          <div className="space-y-6">
+            <div className="flex flex-wrap gap-2 pb-2">
+              {TIPOS_TAREA.map((tipo) => (
                 <button
-                  onClick={(e) => handleDelete(tarea.id, e)}
-                  className="absolute top-3 right-3 p-2 bg-white dark:bg-neutral-900 rounded-lg text-neutral-400 hover:text-red-600 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  key={tipo}
+                  onClick={() => setFiltroTipo(tipo)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+                    filtroTipo === tipo
+                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-black'
+                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700'
+                  }`}
                 >
-                  <Trash2 size={16} />
+                  {tipo}
                 </button>
-                <div className="w-full aspect-video bg-emerald-700/20 rounded-lg mb-4 flex items-center justify-center border border-emerald-700/30 overflow-hidden relative">
-                   {tarea.configuracion_pizarra?.thumbnail ? (
-                     <img src={tarea.configuracion_pizarra.thumbnail} alt={tarea.titulo} className="w-full h-full object-cover" />
-                   ) : (
-                     <ImageIcon className="w-10 h-10 text-emerald-600/50" />
-                   )}
-                </div>
-                <h3 className="font-bold text-neutral-900 dark:text-white text-lg truncate" title={tarea.titulo}>
-                  {tarea.titulo}
-                </h3>
-                {tarea.descripcion && (
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 line-clamp-2 mt-1">
-                    {tarea.descripcion}
-                  </p>
-                )}
-                <div className="mt-4 text-xs text-neutral-400 font-medium">
-                  {new Date(tarea.created_at).toLocaleDateString()}
-                </div>
+              ))}
+            </div>
+
+            {tareasFiltradas.length === 0 ? (
+              <div className="text-center py-12 text-neutral-500 dark:text-neutral-400 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800">
+                <p>No hay tareas de este tipo.</p>
               </div>
-            ))}
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {tareasFiltradas.map((tarea) => (
+                  <div 
+                    key={tarea.id}
+                    onClick={() => handleEdit(tarea)}
+                    className="group relative bg-neutral-50 dark:bg-neutral-800/50 rounded-xl p-5 border border-neutral-200 dark:border-neutral-800 hover:border-red-500/50 dark:hover:border-red-500/50 cursor-pointer transition-all hover:shadow-md"
+                  >
+                    <button
+                      onClick={(e) => handleDelete(tarea.id, e)}
+                      className="absolute top-3 right-3 p-2 bg-white dark:bg-neutral-900 rounded-lg text-neutral-400 hover:text-red-600 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <div className="w-full aspect-video bg-emerald-700/20 rounded-lg mb-4 flex items-center justify-center border border-emerald-700/30 overflow-hidden relative">
+                       {tarea.configuracion_pizarra?.thumbnail ? (
+                         <img src={tarea.configuracion_pizarra.thumbnail} alt={tarea.titulo} className="w-full h-full object-cover" />
+                       ) : (
+                         <ImageIcon className="w-10 h-10 text-emerald-600/50" />
+                       )}
+                    </div>
+                    <h3 className="font-bold text-neutral-900 dark:text-white text-lg truncate" title={tarea.titulo}>
+                      {tarea.titulo}
+                    </h3>
+                    {tarea.descripcion && (
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400 line-clamp-2 mt-1">
+                        {tarea.descripcion}
+                      </p>
+                    )}
+                    <div className="mt-4 text-xs text-neutral-400 font-medium flex justify-between items-center">
+                      <span>{new Date(tarea.created_at).toLocaleDateString()}</span>
+                      <span className="px-2 py-0.5 bg-neutral-200 dark:bg-neutral-700 rounded-md text-[10px] uppercase font-bold">{tarea.configuracion_pizarra?.tipo || 'Activación'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
