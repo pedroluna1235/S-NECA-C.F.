@@ -33,11 +33,18 @@ interface Objetivo {
   imagen_url: string | null;
   pdf_url: string | null;
   video_url: string | null;
+  objetivo_grupal_id: string | null;
   created_at: string;
+}
+
+interface ObjetivoGrupal {
+  id: string;
+  titulo: string;
 }
 
 export function ObjectiveModal({ isOpen, onClose, player }: ObjectiveModalProps) {
   const [objetivos, setObjetivos] = useState<Objetivo[]>([]);
+  const [objetivosGrupales, setObjetivosGrupales] = useState<ObjetivoGrupal[]>([]);
   const [seguimientos, setSeguimientos] = useState<Seguimiento[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [view, setView] = useState<'list' | 'create'>('list');
@@ -52,6 +59,7 @@ export function ObjectiveModal({ isOpen, onClose, player }: ObjectiveModalProps)
   const [imagenUrl, setImagenUrl] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
+  const [objetivoGrupalId, setObjetivoGrupalId] = useState<string>('');
 
   // Seguimiento State
   const [expandedObjectiveId, setExpandedObjectiveId] = useState<string | null>(null);
@@ -95,6 +103,16 @@ export function ObjectiveModal({ isOpen, onClose, player }: ObjectiveModalProps)
       } else {
         setSeguimientos([]);
       }
+
+      // Fetch objetivos grupales for the select dropdown
+      const { data: grupalesData, error: grupalesError } = await supabase
+        .from('objetivos_grupales')
+        .select('id, titulo')
+        .eq('estado', 'Activo');
+        
+      if (!grupalesError) {
+        setObjetivosGrupales(grupalesData || []);
+      }
     } catch (error) {
       console.error('Error al cargar datos:', error);
     } finally {
@@ -111,6 +129,7 @@ export function ObjectiveModal({ isOpen, onClose, player }: ObjectiveModalProps)
     setImagenUrl(null);
     setPdfUrl(null);
     setVideoUrl('');
+    setObjetivoGrupalId('');
   };
 
   const resetSegForm = () => {
@@ -129,6 +148,7 @@ export function ObjectiveModal({ isOpen, onClose, player }: ObjectiveModalProps)
     setImagenUrl(obj.imagen_url);
     setPdfUrl(obj.pdf_url);
     setVideoUrl(obj.video_url || '');
+    setObjetivoGrupalId(obj.objetivo_grupal_id || '');
     setView('create');
   };
 
@@ -149,7 +169,8 @@ export function ObjectiveModal({ isOpen, onClose, player }: ObjectiveModalProps)
         estado: 'Activo',
         imagen_url: imagenUrl,
         pdf_url: pdfUrl,
-        video_url: videoUrl.trim() || null
+        video_url: videoUrl.trim() || null,
+        objetivo_grupal_id: objetivoGrupalId || null
       };
 
       if (editingId) {
@@ -578,6 +599,21 @@ export function ObjectiveModal({ isOpen, onClose, player }: ObjectiveModalProps)
                     <CheckCircle2 size={18} /> Potenciar (Fortalecer)
                   </button>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-neutral-700 dark:text-neutral-300">Vincular a Objetivo Grupal</label>
+                <select
+                  value={objetivoGrupalId}
+                  onChange={e => setObjetivoGrupalId(e.target.value)}
+                  className="w-full p-3 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-neutral-900 dark:text-white appearance-none"
+                >
+                  <option value="">-- Sin vincular --</option>
+                  {objetivosGrupales.map(og => (
+                    <option key={og.id} value={og.id}>{og.titulo}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-neutral-500 mt-1">Opcional. Permite agrupar este objetivo individual dentro de un objetivo de equipo.</p>
               </div>
 
               <div className="space-y-2">
