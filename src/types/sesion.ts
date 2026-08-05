@@ -60,4 +60,5 @@ export interface DatosDisenoSesion {
   tareas: TareaSesion[];
   jugadores: JugadorSesion[];
   sesionesIndividuales: SesionIndividual[];
+  kpis?: string;
 }

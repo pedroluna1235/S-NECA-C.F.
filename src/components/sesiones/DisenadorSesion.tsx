@@ -39,7 +39,8 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
     },
     tareas: [],
     jugadores: [],
-    sesionesIndividuales: []
+    sesionesIndividuales: [],
+    kpis: ''
   });
 
   useEffect(() => {
@@ -412,6 +413,18 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
               </button>
             </div>
           )}
+
+          {/* KPIS */}
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 mt-6">
+            <h3 className="text-xl font-bold mb-4">KPIS</h3>
+            <textarea
+              value={datos.kpis || ''}
+              onChange={e => setDatos(d => ({ ...d, kpis: e.target.value }))}
+              placeholder="Escribe aquí los KPIs de la sesión..."
+              rows={4}
+              className="w-full p-3 border rounded-xl dark:bg-neutral-950 dark:border-neutral-800 resize-y focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all"
+            />
+          </div>
         </div>
 
         {/* JUGADORES (SIDEBAR) */}

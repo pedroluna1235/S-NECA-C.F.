@@ -144,6 +144,18 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
                 </div>
               </div>
             ))}
+            
+            {/* KPIS */}
+            {datos.kpis && (
+              <div className="border text-sm flex flex-col" style={styles.borderBlack}>
+                <div className="border-b p-2 font-bold text-center" style={{ ...styles.borderBlack, ...styles.bgGray }}>
+                  KPIS
+                </div>
+                <div className="p-4 whitespace-pre-wrap leading-relaxed" style={styles.bgWhite}>
+                  {datos.kpis}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* JUGADORES */}
