@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Target, Plus, Trash2, Edit2, ChevronDown, ChevronUp, Save, X, Loader2, BookOpen, Users } from 'lucide-react';
+import { Target, Plus, Trash2, Edit2, ChevronDown, ChevronUp, Save, X, Loader2, BookOpen, Users, Brain } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -29,7 +29,7 @@ export function ModeloJuego() {
   const [contenidos, setContenidos] = useState<Contenido[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'contenido' | 'posicion'>('contenido');
+  const [activeTab, setActiveTab] = useState<'tecnico' | 'tactico' | 'posicion'>('tecnico');
 
   // Edit/Create state for Contenido/Posicion
   const [editingContenidoId, setEditingContenidoId] = useState<string | null>(null);
@@ -52,11 +52,15 @@ export function ModeloJuego() {
         
       if (error && error.code !== '42P01') throw error; // Ignore undefined table
       
-      // Mapear datos viejos que no tienen tipo a 'contenido' por defecto
-      const parsedData = (data || []).map((item: any) => ({
-        ...item,
-        tipo: item.tipo || 'contenido'
-      }));
+      // Mapear datos viejos que no tienen tipo a 'tecnico' por defecto
+      const parsedData = (data || []).map((item: any) => {
+        let tipo = item.tipo || 'tecnico';
+        if (tipo === 'contenido') tipo = 'tecnico';
+        return {
+          ...item,
+          tipo
+        };
+      });
       setContenidos(parsedData);
       
     } catch (error) {
@@ -92,7 +96,11 @@ export function ModeloJuego() {
       setContenidos([...contenidos, data]);
       setEditTitulo('');
       setExpandedId(data.id);
-      toast.success(activeTab === 'contenido' ? 'Contenido creado' : 'Posición creada');
+      let successMsg = 'Elemento creado';
+      if (activeTab === 'tecnico') successMsg = 'Contenido Técnico creado';
+      if (activeTab === 'tactico') successMsg = 'Contenido Táctico creado';
+      if (activeTab === 'posicion') successMsg = 'Posición creada';
+      toast.success(successMsg);
     } catch (error) {
       console.error('Error creando:', error);
       toast.error('Error al guardar. Comprueba que actualizaste la base de datos.');
@@ -227,7 +235,7 @@ export function ModeloJuego() {
             Modelo de Juego
           </h1>
           <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-            Define los contenidos tácticos y los aspectos a incidir en cada posición
+            Define los contenidos técnicos, tácticos y los aspectos a incidir en cada posición
           </p>
         </div>
       </div>
@@ -237,14 +245,25 @@ export function ModeloJuego() {
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-6 border-b border-neutral-200 dark:border-neutral-800 pb-4">
           <button
-            onClick={() => setActiveTab('contenido')}
+            onClick={() => setActiveTab('tecnico')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-colors ${
-              activeTab === 'contenido'
+              activeTab === 'tecnico'
                 ? 'bg-neutral-900 text-white dark:bg-white dark:text-black'
                 : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700'
             }`}
           >
             <BookOpen size={18} />
+            Contenidos Técnicos
+          </button>
+          <button
+            onClick={() => setActiveTab('tactico')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-colors ${
+              activeTab === 'tactico'
+                ? 'bg-neutral-900 text-white dark:bg-white dark:text-black'
+                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700'
+            }`}
+          >
+            <Brain size={18} />
             Contenidos Tácticos
           </button>
           <button
@@ -458,7 +477,7 @@ export function ModeloJuego() {
                   type="text"
                   value={editTitulo}
                   onChange={(e) => setEditTitulo(e.target.value)}
-                  placeholder={activeTab === 'contenido' ? "Nuevo contenido (ej: Salida de balón...)" : "Nueva posición (ej: Carrilero...)"}
+                  placeholder={activeTab === 'posicion' ? "Nueva posición (ej: Carrilero...)" : "Nuevo contenido..."}
                   className="flex-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg px-4 py-2 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleAddContenido();
@@ -470,7 +489,7 @@ export function ModeloJuego() {
                   className="flex justify-center items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-bold transition-all"
                 >
                   <Plus size={18} />
-                  <span>Añadir {activeTab === 'contenido' ? 'Contenido' : 'Posición'}</span>
+                  <span>Añadir {activeTab === 'posicion' ? 'Posición' : 'Contenido'}</span>
                 </button>
               </div>
             </div>
