@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Trash2, ExternalLink, FileText, CalendarDays, Edit2, Users } from 'lucide-react';
+import { Trash2, ExternalLink, FileText, CalendarDays, Edit2, Users, BookOpen } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { ModalEditarObservaciones } from './ModalEditarObservaciones';
 import type { Sesion } from '../../pages/Sesiones';
@@ -9,9 +9,10 @@ import type { Sesion } from '../../pages/Sesiones';
 interface HistorialSesionesProps {
   sesiones: Sesion[];
   onSesionDeleted: () => void;
+  onEditDesign: (sesion: Sesion) => void;
 }
 
-export function HistorialSesiones({ sesiones, onSesionDeleted }: HistorialSesionesProps) {
+export function HistorialSesiones({ sesiones, onSesionDeleted, onEditDesign }: HistorialSesionesProps) {
   const [editingSesion, setEditingSesion] = useState<Sesion | null>(null);
   
   const handleDelete = async (id: string, pdfUrl: string) => {
@@ -89,6 +90,15 @@ export function HistorialSesiones({ sesiones, onSesionDeleted }: HistorialSesion
                 >
                   <Edit2 size={18} />
                 </button>
+                {sesion.datos_diseno && (
+                  <button
+                    onClick={() => onEditDesign(sesion)}
+                    className="text-neutral-400 hover:text-green-600 dark:hover:text-green-500 p-2 transition-colors"
+                    title="Editar diseño completo"
+                  >
+                    <BookOpen size={18} />
+                  </button>
+                )}
                 <button
                   onClick={() => handleDelete(sesion.id, sesion.pdf_url)}
                   className="text-neutral-400 hover:text-red-600 dark:hover:text-red-500 p-2 transition-colors"

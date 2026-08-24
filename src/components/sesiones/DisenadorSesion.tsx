@@ -9,9 +9,11 @@ import { format } from 'date-fns';
 
 interface DisenadorSesionProps {
   onSesionGuardada: () => void;
+  initialDatos?: DatosDisenoSesion;
+  sesionIdToEdit?: string;
 }
 
-export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
+export function DisenadorSesion({ onSesionGuardada, initialDatos, sesionIdToEdit }: DisenadorSesionProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [nuevoJugadorNombre, setNuevoJugadorNombre] = useState('');
@@ -35,7 +37,7 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
 
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   
-  const [datos, setDatos] = useState<DatosDisenoSesion>({
+  const [datos, setDatos] = useState<DatosDisenoSesion>(initialDatos || {
     cabecera: {
       objetivo: '',
       principios: '',
@@ -64,6 +66,12 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
 
   useEffect(() => {
     const fetchJugadores = async () => {
+      // Si estamos editando, ya tenemos los jugadores en el estado inicial
+      if (initialDatos && initialDatos.jugadores && initialDatos.jugadores.length > 0) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from('jugadores')
@@ -90,7 +98,7 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
       }
     };
     fetchJugadores();
-  }, []);
+  }, [initialDatos]);
 
   const addTarea = () => {
     const nuevaTarea: TareaSesion = {
@@ -170,28 +178,57 @@ export function DisenadorSesion({ onSesionGuardada }: DisenadorSesionProps) {
       // 2. Guardar en Base de Datos
       const titulo = `Sesión ${datos.cabecera.sesionNum}${datos.cabecera.objetivo ? ` - ${datos.cabecera.objetivo}` : ''}`;
       
-      const { error } = await supabase
-        .from('sesiones')
-        .insert([{
-          fecha: datos.cabecera.fecha,
-          titulo: titulo,
-          pdf_url: pdfUrl,
-          observaciones: 'Sesión diseñada automáticamente',
-          datos_diseno: datos // Asumiendo que la columna existe. Si no, se ignorará o dará error.
-        }]);
-
-      if (error) {
-        // Fallback si la columna datos_diseno no existe aún
-        console.warn('Error inserting with datos_diseno, trying without it', error);
-        const { error: fallbackError } = await supabase
+      let error;
+      
+      if (sesionIdToEdit) {
+        const { error: updateError } = await supabase
+          .from('sesiones')
+          .update({
+            fecha: datos.cabecera.fecha,
+            titulo: titulo,
+            pdf_url: pdfUrl,
+            datos_diseno: datos
+          })
+          .eq('id', sesionIdToEdit);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
           .from('sesiones')
           .insert([{
             fecha: datos.cabecera.fecha,
             titulo: titulo,
             pdf_url: pdfUrl,
-            observaciones: 'Sesión diseñada automáticamente'
+            observaciones: 'Sesión diseñada automáticamente',
+            datos_diseno: datos
           }]);
-        if (fallbackError) throw fallbackError;
+        error = insertError;
+      }
+
+      if (error) {
+        // Fallback si la columna datos_diseno no existe aún
+        console.warn('Error saving with datos_diseno, trying without it', error);
+        
+        if (sesionIdToEdit) {
+          const { error: fallbackError } = await supabase
+            .from('sesiones')
+            .update({
+              fecha: datos.cabecera.fecha,
+              titulo: titulo,
+              pdf_url: pdfUrl
+            })
+            .eq('id', sesionIdToEdit);
+          if (fallbackError) throw fallbackError;
+        } else {
+          const { error: fallbackError } = await supabase
+            .from('sesiones')
+            .insert([{
+              fecha: datos.cabecera.fecha,
+              titulo: titulo,
+              pdf_url: pdfUrl,
+              observaciones: 'Sesión diseñada automáticamente'
+            }]);
+          if (fallbackError) throw fallbackError;
+        }
       }
 
       toast.success('Sesión guardada correctamente', { id: loadingToast });

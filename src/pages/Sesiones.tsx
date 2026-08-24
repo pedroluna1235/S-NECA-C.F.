@@ -24,6 +24,12 @@ export function Sesiones() {
   const [sesiones, setSesiones] = useState<Sesion[]>([]);
   const [partidos, setPartidos] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sesionToEdit, setSesionToEdit] = useState<Sesion | null>(null);
+
+  const handleEditDesign = (sesion: Sesion) => {
+    setSesionToEdit(sesion);
+    setActiveTab('disenar');
+  };
 
   const fetchSesiones = async () => {
     try {
@@ -127,12 +133,16 @@ export function Sesiones() {
           <HistorialSesiones 
             sesiones={sesiones} 
             onSesionDeleted={fetchSesiones} 
+            onEditDesign={handleEditDesign}
           />
         ) : activeTab === 'disenar' ? (
           <DisenadorSesion 
+            initialDatos={sesionToEdit?.datos_diseno}
+            sesionIdToEdit={sesionToEdit?.id}
             onSesionGuardada={() => {
               fetchSesiones();
               setActiveTab('calendario');
+              setSesionToEdit(null);
             }}
           />
         ) : (
