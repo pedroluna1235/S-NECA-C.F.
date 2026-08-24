@@ -172,7 +172,7 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
                     style={
                       !jugador.disponible 
                         ? { ...styles.borderBlack, ...styles.bgRed, ...styles.textRed }
-                        : { ...styles.borderBlack, ...styles.bgWhite }
+                        : { ...styles.borderBlack, ...styles.bgWhite, ...(jugador.manual ? { color: '#2563eb' } : {}) }
                     }
                   >
                     <span className="font-bold mr-1.5">{index + 1}.</span>

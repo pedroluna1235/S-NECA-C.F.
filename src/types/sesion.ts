@@ -2,6 +2,7 @@ export interface JugadorSesion {
   id: string;
   nombre: string;
   disponible: boolean;
+  manual?: boolean;
 }
 
 export interface TareaSesion {
