@@ -18,7 +18,11 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
     const canvas = await html2canvas(element, {
       scale: 2, // Mayor calidad
       useCORS: true, // Permitir imágenes de otros dominios
-      logging: false
+      logging: false,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
+      width: element.scrollWidth,
+      height: element.scrollHeight
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 1.0);
