@@ -8,10 +8,17 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
     throw new Error(`Element with id ${elementId} not found`);
   }
 
-  // Hacer el elemento visible temporalmente si estaba oculto con display: none
-  // Asumimos que se usa un contenedor fuera de pantalla en lugar de display:none
-  // pero por si acaso, lo forzamos.
-  const originalDisplay = element.style.display;
+  const originalStyles = { 
+    position: element.style.position, 
+    top: element.style.top, 
+    left: element.style.left, 
+    zIndex: element.style.zIndex, 
+    display: element.style.display 
+  };
+  element.style.position = 'absolute';
+  element.style.top = '0';
+  element.style.left = '0';
+  element.style.zIndex = '-9999';
   element.style.display = 'block';
 
   try {
@@ -76,6 +83,6 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
     return publicUrl;
   } finally {
     // Restaurar display
-    element.style.display = originalDisplay;
+    Object.assign(element.style, originalStyles);
   }
 }
