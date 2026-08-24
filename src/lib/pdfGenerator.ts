@@ -17,23 +17,29 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
     top: element.style.top, 
     left: element.style.left, 
     zIndex: element.style.zIndex, 
-    display: element.style.display 
+    display: element.style.display,
+    height: element.style.height,
+    overflow: element.style.overflow
   };
   element.style.position = 'absolute';
   element.style.top = '0';
   element.style.left = '0';
   element.style.zIndex = '-9999';
   element.style.display = 'block';
+  element.style.height = 'max-content';
+  element.style.overflow = 'visible';
 
   try {
     const canvas = await html2canvas(element, {
       scale: 2, // Mayor calidad
       useCORS: true, // Permitir imágenes de otros dominios
-      logging: false,
+      logging: true,
       windowWidth: element.scrollWidth,
       windowHeight: element.scrollHeight,
       width: element.scrollWidth,
-      height: element.scrollHeight
+      height: element.scrollHeight,
+      scrollY: 0,
+      scrollX: 0
     });
 
     const imgData = canvas.toDataURL('image/jpeg', 1.0);
