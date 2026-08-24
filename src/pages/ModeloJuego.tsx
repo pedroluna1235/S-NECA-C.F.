@@ -1,11 +1,21 @@
 import { useState, useEffect } from 'react';
-import { Target, Plus, Trash2, Edit2, ChevronDown, ChevronUp, Save, X, Loader2, BookOpen, Users, Brain } from 'lucide-react';
+import { Target, Plus, Trash2, Edit2, ChevronDown, ChevronUp, Save, X, Loader2, BookOpen, Users, Brain, CheckCircle, Calendar, BarChart2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+
+interface RegistroTrabajo {
+  id: string;
+  fecha: string;
+}
 
 interface Aspecto {
   id: string;
   texto: string;
+  registros?: RegistroTrabajo[];
 }
 
 interface Contenido {
@@ -41,6 +51,66 @@ export function ModeloJuego() {
   
   const [editingAspectoId, setEditingAspectoId] = useState<string | null>(null);
   const [editAspectoText, setEditAspectoText] = useState('');
+  
+  const [viewingHistoryFor, setViewingHistoryFor] = useState<{contenidoId: string, aspectoId: string} | null>(null);
+  const [newRegistroDate, setNewRegistroDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+
+
+  const handleMarcarTrabajado = async (contenidoId: string, aspectoId: string, fechaStr?: string) => {
+    const contenido = contenidos.find(c => c.id === contenidoId);
+    if (!contenido) return;
+
+    const aspecto = contenido.aspectos.find(a => a.id === aspectoId);
+    if (!aspecto) return;
+
+    const fecha = fechaStr || format(new Date(), 'yyyy-MM-dd');
+    const newRegistro: RegistroTrabajo = { id: crypto.randomUUID(), fecha };
+    const newRegistros = [...(aspecto.registros || []), newRegistro];
+    
+    newRegistros.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+
+    const newAspectos = contenido.aspectos.map(a => a.id === aspectoId ? { ...a, registros: newRegistros } : a);
+
+    try {
+      const { error } = await supabase
+        .from('modelo_juego')
+        .update({ aspectos: newAspectos })
+        .eq('id', contenidoId);
+        
+      if (error) throw error;
+      setContenidos(contenidos.map(c => c.id === contenidoId ? { ...c, aspectos: newAspectos } : c));
+      toast.success('Trabajo registrado');
+      if (fechaStr) {
+          setNewRegistroDate(format(new Date(), 'yyyy-MM-dd'));
+      }
+    } catch (error) {
+      toast.error('Error al registrar trabajo');
+    }
+  };
+
+  const handleDeleteRegistro = async (contenidoId: string, aspectoId: string, registroId: string) => {
+    const contenido = contenidos.find(c => c.id === contenidoId);
+    if (!contenido) return;
+
+    const aspecto = contenido.aspectos.find(a => a.id === aspectoId);
+    if (!aspecto) return;
+
+    const newRegistros = (aspecto.registros || []).filter(r => r.id !== registroId);
+    const newAspectos = contenido.aspectos.map(a => a.id === aspectoId ? { ...a, registros: newRegistros } : a);
+
+    try {
+      const { error } = await supabase
+        .from('modelo_juego')
+        .update({ aspectos: newAspectos })
+        .eq('id', contenidoId);
+        
+      if (error) throw error;
+      setContenidos(contenidos.map(c => c.id === contenidoId ? { ...c, aspectos: newAspectos } : c));
+      toast.success('Registro eliminado');
+    } catch (error) {
+      toast.error('Error al eliminar registro');
+    }
+  };
 
   const fetchContenidos = async () => {
     try {
@@ -226,8 +296,141 @@ export function ModeloJuego() {
 
   const filteredItems = contenidos.filter(c => c.tipo === activeTab);
 
+  const renderHistoryModal = () => {
+    if (!viewingHistoryFor) return null;
+    
+    const contenido = contenidos.find(c => c.id === viewingHistoryFor.contenidoId);
+    const aspecto = contenido?.aspectos.find(a => a.id === viewingHistoryFor.aspectoId);
+    
+    if (!contenido || !aspecto) return null;
+
+    const registros = aspecto.registros || [];
+    
+    const rawMonthCounts: Record<string, number> = {};
+    registros.forEach(r => {
+      try {
+        const my = r.fecha.substring(0, 7); // YYYY-MM
+        rawMonthCounts[my] = (rawMonthCounts[my] || 0) + 1;
+      } catch (e) {}
+    });
+
+    const chartData = Object.keys(rawMonthCounts).sort().map(my => {
+      return {
+        name: format(parseISO(my + '-01'), 'MMM yy', { locale: es }),
+        veces: rawMonthCounts[my]
+      };
+    });
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-neutral-200 dark:border-neutral-800">
+          <div className="p-6 flex items-start justify-between border-b border-neutral-200 dark:border-neutral-800">
+            <div>
+              <h2 className="text-xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                <BarChart2 className="w-6 h-6 text-red-600" />
+                Historial de Trabajo
+              </h2>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1 line-clamp-2">
+                {aspecto.texto}
+              </p>
+            </div>
+            <button 
+              onClick={() => setViewingHistoryFor(null)}
+              className="p-2 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-8">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 bg-neutral-50 dark:bg-neutral-950 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800">
+              <div className="flex-1">
+                <label className="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-2">
+                  Añadir registro (Fecha)
+                </label>
+                <div className="flex items-center gap-2">
+                  <Calendar size={18} className="text-neutral-400 flex-shrink-0" />
+                  <input 
+                    type="date" 
+                    value={newRegistroDate}
+                    onChange={(e) => setNewRegistroDate(e.target.value)}
+                    className="flex-1 bg-white dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  if (newRegistroDate) {
+                    handleMarcarTrabajado(contenido.id, aspecto.id, newRegistroDate);
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold transition-colors text-sm whitespace-nowrap h-[38px]"
+              >
+                Registrar Fecha
+              </button>
+            </div>
+
+            {chartData.length > 0 ? (
+              <div className="h-64 w-full">
+                <h3 className="text-sm font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-4">
+                  Evolución (veces por mes)
+                </h3>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#888' }} axisLine={false} tickLine={false} />
+                    <Tooltip 
+                      cursor={{ fill: 'transparent' }}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      labelStyle={{ color: '#888' }}
+                    />
+                    <Bar dataKey="veces" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-center text-neutral-500 py-8 bg-neutral-50 dark:bg-neutral-900/50 rounded-xl border border-dashed border-neutral-200 dark:border-neutral-800">
+                No hay registros para mostrar en el gráfico
+              </div>
+            )}
+
+            <div>
+              <h3 className="text-sm font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                <span>Registros ({registros.length})</span>
+                <span className="text-xs font-normal text-neutral-400 normal-case">Ordenados del más reciente</span>
+              </h3>
+              {registros.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                  {registros.map(reg => (
+                    <div key={reg.id} className="flex items-center justify-between bg-white dark:bg-neutral-900 p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 shadow-sm">
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300 font-medium flex items-center gap-2">
+                        <CheckCircle size={14} className="text-green-500" />
+                        {format(parseISO(reg.fecha), 'd MMM yyyy', { locale: es })}
+                      </span>
+                      <button 
+                        onClick={() => handleDeleteRegistro(contenido.id, aspecto.id, reg.id)}
+                        className="p-1.5 text-neutral-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
+                        title="Eliminar registro"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-neutral-500 text-center py-4">Aún no se ha trabajado este aspecto</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+
   return (
     <div className="space-y-6">
+      {renderHistoryModal()}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
@@ -239,6 +442,7 @@ export function ModeloJuego() {
           </p>
         </div>
       </div>
+
 
       <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 min-h-[500px] flex flex-col">
         
@@ -402,26 +606,53 @@ export function ModeloJuego() {
                             ) : (
                               <div className="text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg p-3">
                                 {aspecto.texto}
+                                {(aspecto.registros?.length ?? 0) > 0 && (
+                                  <div className="mt-2 flex flex-wrap gap-1">
+                                    {aspecto.registros!.slice(0, 15).map((r, i) => (
+                                      <div key={i} className="w-2 h-2 rounded-sm bg-green-500" title={r.fecha}></div>
+                                    ))}
+                                    {(aspecto.registros?.length ?? 0) > 15 && <span className="text-[10px] text-neutral-400 font-bold ml-1">+{aspecto.registros!.length - 15}</span>}
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
                           
                           {editingAspectoId !== aspecto.id && (
-                            <div className="flex flex-col sm:flex-row gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1">
+                              <div className="flex flex-col sm:flex-row gap-1 opacity-0 group-hover:opacity-100 transition-opacity mr-2 border-r border-neutral-200 dark:border-neutral-700 pr-2">
+                                <button
+                                  onClick={() => handleMarcarTrabajado(item.id, aspecto.id)}
+                                  title="Marcar como trabajado hoy"
+                                  className="p-1.5 text-neutral-400 hover:text-green-600 rounded-md transition-colors"
+                                >
+                                  <CheckCircle size={16} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditAspectoText(aspecto.texto);
+                                    setEditingAspectoId(aspecto.id);
+                                  }}
+                                  className="p-1.5 text-neutral-400 hover:text-blue-600 rounded-md transition-colors"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteAspecto(item.id, aspecto.id)}
+                                  className="p-1.5 text-neutral-400 hover:text-red-600 rounded-md transition-colors"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
                               <button
-                                onClick={() => {
-                                  setEditAspectoText(aspecto.texto);
-                                  setEditingAspectoId(aspecto.id);
-                                }}
-                                className="p-1.5 text-neutral-400 hover:text-blue-600 rounded-md"
+                                onClick={() => setViewingHistoryFor({ contenidoId: item.id, aspectoId: aspecto.id })}
+                                className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors shadow-sm"
+                                title="Ver historial y gráfica"
                               >
-                                <Edit2 size={14} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteAspecto(item.id, aspecto.id)}
-                                className="p-1.5 text-neutral-400 hover:text-red-600 rounded-md"
-                              >
-                                <Trash2 size={14} />
+                                <BarChart2 size={14} className="text-red-600 dark:text-red-500" />
+                                <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                                  {aspecto.registros?.length || 0}
+                                </span>
                               </button>
                             </div>
                           )}
