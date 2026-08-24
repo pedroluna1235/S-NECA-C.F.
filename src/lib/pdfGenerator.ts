@@ -8,6 +8,10 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
     throw new Error(`Element with id ${elementId} not found`);
   }
 
+  const parent = element.parentElement;
+  const nextSibling = element.nextSibling;
+  document.body.appendChild(element);
+
   const originalStyles = { 
     position: element.style.position, 
     top: element.style.top, 
@@ -84,5 +88,12 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
   } finally {
     // Restaurar display
     Object.assign(element.style, originalStyles);
+    if (parent) {
+      if (nextSibling) {
+        parent.insertBefore(element, nextSibling);
+      } else {
+        parent.appendChild(element);
+      }
+    }
   }
 }
