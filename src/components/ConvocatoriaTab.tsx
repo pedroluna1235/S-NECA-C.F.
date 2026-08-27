@@ -489,12 +489,15 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
             const nameParts = jugador.nombre.split(' ');
             const shortName = nameParts.length > 2 ? `${nameParts[0]} ${nameParts[1]}` : jugador.nombre;
             
-            doc.text(shortName, xPos, currentY + avatarSize + 4, { maxWidth: colWidth - 1 });
+            const nameLines = doc.splitTextToSize(shortName, colWidth - 1);
+            doc.text(nameLines, xPos, currentY + avatarSize + 4);
             
             doc.setFont("helvetica", "normal");
             doc.setFontSize(6.5);
             doc.setTextColor(100, 100, 100);
-            doc.text(`Dorsal: ${jugador.dorsal || '-'}`, xPos, currentY + avatarSize + 7.5);
+            // offset the dorsal based on number of lines in the name
+            const dorsalYOffset = currentY + avatarSize + 4 + (nameLines.length * 3.5);
+            doc.text(`Dorsal: ${jugador.dorsal || '-'}`, xPos, dorsalYOffset);
             
             currentColumn++;
           }
