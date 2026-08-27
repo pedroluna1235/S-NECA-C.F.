@@ -341,7 +341,16 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       doc.text("Detalles de la Citación:", 18, currentY + 10);
       
       doc.setFont("helvetica", "normal");
+      
+      // Resaltar la hora de citación
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(220, 38, 38); // Red
       doc.text(`Hora de citación: ${formData.hora_citacion || 'Por definir'}`, 18, currentY + 18);
+      
+      // Reset font for the rest
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(0, 0, 0); // Black
+      
       doc.text(`Lugar de citación: ${formData.lugar_citacion || 'Por definir'}`, 18, currentY + 26);
       doc.text(`Hora del partido: ${formData.hora_partido || 'Por definir'}`, 100, currentY + 18);
       doc.text(`Indumentaria: ${formData.indumentaria || 'Oficial'}`, 18, currentY + 34);
