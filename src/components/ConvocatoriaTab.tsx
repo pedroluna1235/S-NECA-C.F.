@@ -73,6 +73,40 @@ const getBase64ImageFromUrl = (imageUrl: string): Promise<string | null> => {
   });
 };
 
+const getWatermarkBase64 = (imageUrl: string, opacity: number = 0.08): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      // We don't need it to be huge, 800px is enough for a watermark
+      const MAX_WIDTH = 800;
+      let width = img.width;
+      let height = img.height;
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width);
+        width = MAX_WIDTH;
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        try {
+          ctx.globalAlpha = opacity;
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (e) {
+          resolve(null);
+        }
+      } else {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = imageUrl;
+  });
+};
+
 export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -221,6 +255,20 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       // Add red header strip
       doc.setFillColor(220, 38, 38);
       doc.rect(0, 0, pageWidth, 42, 'F');
+      
+      // Add Watermark
+      const watermarkBase64 = await getWatermarkBase64('/logo.png', 0.12);
+      if (watermarkBase64) {
+        try {
+          const wmSize = 140;
+          const wmX = (pageWidth - wmSize) / 2;
+          // Place it vertically centered in the lower part of the page
+          const wmY = 120;
+          doc.addImage(watermarkBase64, 'PNG', wmX, wmY, wmSize, wmSize);
+        } catch (e) {
+          console.error("Error adding watermark:", e);
+        }
+      }
       
       // Load and add Logos
       const localLogoBase64 = await getBase64ImageFromUrl('/logo.png');
