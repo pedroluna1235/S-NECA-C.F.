@@ -35,14 +35,31 @@ const getBase64ImageFromUrl = (imageUrl: string): Promise<string | null> => {
     img.crossOrigin = 'Anonymous'; // Required for CORS
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      // Set canvas dimensions to the image's naturally oriented dimensions
-      canvas.width = img.width;
-      canvas.height = img.height;
+      const MAX_WIDTH = 300;
+      const MAX_HEIGHT = 300;
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > MAX_WIDTH) {
+        height = Math.round((height * MAX_WIDTH) / width);
+        width = MAX_WIDTH;
+      }
+      if (height > MAX_HEIGHT) {
+        width = Math.round((width * MAX_HEIGHT) / height);
+        height = MAX_HEIGHT;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.drawImage(img, 0, 0);
-        // Exporting as PNG to keep transparency
-        resolve(canvas.toDataURL('image/png'));
+        try {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (e) {
+          console.error("Canvas toDataURL error:", e);
+          resolve(null);
+        }
       } else {
         resolve(null);
       }
@@ -212,10 +229,18 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       const isLocal = matchDetails.condicion !== 'Visitante';
       
       if (localLogoBase64) {
-        doc.addImage(localLogoBase64, 'PNG', isLocal ? 14 : pageWidth - 30, 8, 25, 25);
+        try {
+          doc.addImage(localLogoBase64, 'PNG', isLocal ? 14 : pageWidth - 30, 8, 25, 25);
+        } catch (e) {
+          console.error("Error adding local logo:", e);
+        }
       }
       if (rivalLogoBase64) {
-        doc.addImage(rivalLogoBase64, 'PNG', !isLocal ? 14 : pageWidth - 30, 8, 25, 25);
+        try {
+          doc.addImage(rivalLogoBase64, 'PNG', !isLocal ? 14 : pageWidth - 30, 8, 25, 25);
+        } catch (e) {
+          console.error("Error adding rival logo:", e);
+        }
       }
       
       // Title
@@ -408,7 +433,8 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       toast.success("PDF generado con éxito");
     } catch (error) {
       console.error("Error generating PDF:", error);
-      toast.error("Hubo un error al generar el PDF");
+      const errorMessage = error instanceof Error ? error.message : "Desconocido";
+      toast.error(`Hubo un error al generar el PDF: ${errorMessage}`);
     } finally {
       setGeneratingPdf(false);
     }
