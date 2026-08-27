@@ -331,9 +331,21 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       const hasObservaciones = formData.observaciones && formData.observaciones.trim() !== '';
       const hasComoIr = formData.como_ir && formData.como_ir.trim() !== '';
       
-      let boxHeight = 45;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      
+      const indumentariaText = `Indumentaria: ${formData.indumentaria || 'Oficial'}`;
+      const indumentariaLines = doc.splitTextToSize(indumentariaText, pageWidth - 36);
+      
+      let obsLines: string[] = [];
+      if (hasObservaciones) {
+        obsLines = doc.splitTextToSize(formData.observaciones, pageWidth - 36);
+      }
+      
+      // Calculate dynamic box height
+      let boxHeight = 45 + ((indumentariaLines.length - 1) * 5);
       if (hasComoIr) boxHeight += 10;
-      if (hasObservaciones) boxHeight += 20;
+      if (hasObservaciones) boxHeight += 10 + (obsLines.length * 5);
       
       doc.roundedRect(14, currentY, pageWidth - 28, boxHeight, 3, 3, 'FD');
       
@@ -353,9 +365,10 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       
       doc.text(`Lugar de citación: ${formData.lugar_citacion || 'Por definir'}`, 18, currentY + 26);
       doc.text(`Hora del partido: ${formData.hora_partido || 'Por definir'}`, 100, currentY + 18);
-      doc.text(`Indumentaria: ${formData.indumentaria || 'Oficial'}`, 18, currentY + 34);
       
-      let nextLineY = currentY + 44;
+      doc.text(indumentariaLines, 18, currentY + 34);
+      
+      let nextLineY = currentY + 44 + ((indumentariaLines.length - 1) * 5);
       
       if (hasComoIr) {
         doc.setFont("helvetica", "bold");
@@ -374,9 +387,7 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
         doc.text("Observaciones:", 18, nextLineY);
         doc.setFont("helvetica", "normal");
         
-        // Split long text into multiple lines
-        const obsLines = doc.splitTextToSize(formData.observaciones, pageWidth - 36);
-        doc.text(obsLines, 18, nextLineY + 7);
+        doc.text(obsLines, 18, nextLineY + 6);
       }
       
       currentY += boxHeight + 15;
