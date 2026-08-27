@@ -41,8 +41,8 @@ const getBase64ImageFromUrl = (imageUrl: string): Promise<string | null> => {
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(img, 0, 0);
-        // Exporting as JPEG usually gives best compression and strips old EXIF
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
+        // Exporting as PNG to keep transparency
+        resolve(canvas.toDataURL('image/png'));
       } else {
         resolve(null);
       }
@@ -203,7 +203,7 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       // --- HEADER ---
       // Add red header strip
       doc.setFillColor(220, 38, 38);
-      doc.rect(0, 0, pageWidth, 35, 'F');
+      doc.rect(0, 0, pageWidth, 42, 'F');
       
       // Load and add Logos
       const localLogoBase64 = await getBase64ImageFromUrl('/logo.png');
@@ -212,30 +212,35 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       const isLocal = matchDetails.condicion !== 'Visitante';
       
       if (localLogoBase64) {
-        doc.addImage(localLogoBase64, 'JPEG', isLocal ? 14 : pageWidth - 30, 5, 25, 25);
+        doc.addImage(localLogoBase64, 'PNG', isLocal ? 14 : pageWidth - 30, 8, 25, 25);
       }
       if (rivalLogoBase64) {
-        // Find format from url or assume PNG
-        const format = matchDetails.rival?.escudo_url?.toLowerCase().endsWith('png') ? 'PNG' : 'JPEG';
-        doc.addImage(rivalLogoBase64, format, !isLocal ? 14 : pageWidth - 30, 5, 25, 25);
+        doc.addImage(rivalLogoBase64, 'PNG', !isLocal ? 14 : pageWidth - 30, 8, 25, 25);
       }
       
       // Title
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
-      doc.text("CONVOCATORIA OFICIAL", pageWidth / 2, 17, { align: 'center' });
+      doc.text("CONVOCATORIA OFICIAL", pageWidth / 2, 14, { align: 'center' });
       doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
+      doc.setFont("helvetica", "bold");
       
-      let matchSubtitle = isLocal ? `SÉNECA C.F. vs ${matchDetails.rival?.nombre}` : `${matchDetails.rival?.nombre} vs SÉNECA C.F.`;
+      let matchTitle = isLocal ? `SÉNECA C.F. vs ${matchDetails.rival?.nombre}` : `${matchDetails.rival?.nombre} vs SÉNECA C.F.`;
+      doc.text(matchTitle, pageWidth / 2, 22, { align: 'center' });
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
       if (matchDetails.jornada) {
-        matchSubtitle += ` - ${matchDetails.jornada}`;
+        doc.text(matchDetails.jornada, pageWidth / 2, 29, { align: 'center' });
       }
-      doc.text(matchSubtitle, pageWidth / 2, 26, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "italic");
+      doc.text("Prebenjamín A - ADN Rojinegro", pageWidth / 2, 36, { align: 'center' });
       
       // --- INFO BOX ---
-      let currentY = 45;
+      let currentY = 50;
       
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(11);
@@ -316,7 +321,7 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       await Promise.all(imagePromises);
       
       // Draw grid
-      const cols = 4;
+      const cols = 5;
       const colWidth = (pageWidth - 28) / cols;
       
       for (const pos of posiciones) {
@@ -324,19 +329,19 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
         if (jugadoresPos.length > 0) {
           
           // Check page bounds before drawing position header
-          if (currentY > 260) {
+          if (currentY > 270) {
             doc.addPage();
             currentY = 20;
           }
           
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(12);
+          doc.setFontSize(11);
           doc.setTextColor(220, 38, 38);
           doc.text(pos.toUpperCase() + 'S', 14, currentY);
-          currentY += 8;
+          currentY += 6;
           
           let currentColumn = 0;
-          let rowMaxHeight = 35; // height allocated for a row of players
+          let rowMaxHeight = 28; // height allocated for a row of players
           
           for (let i = 0; i < jugadoresPos.length; i++) {
             const jugador = jugadoresPos[i];
@@ -346,7 +351,7 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
               currentColumn = 0;
               currentY += rowMaxHeight;
               
-              if (currentY > 260) {
+              if (currentY > 270) {
                 doc.addPage();
                 currentY = 20;
               }
@@ -358,45 +363,44 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
             const photoB64 = playerImages[jugador.id];
             if (photoB64) {
               try {
-                // Since we exported as JPEG from our canvas helper, we use JPEG format
-                doc.addImage(photoB64, 'JPEG', xPos, currentY, 20, 20);
+                doc.addImage(photoB64, 'PNG', xPos, currentY, 16, 16);
               } catch (e) {
                 // fallback if drawing fails
                 doc.setDrawColor(200, 200, 200);
                 doc.setFillColor(240, 240, 240);
-                doc.rect(xPos, currentY, 20, 20, 'FD');
+                doc.rect(xPos, currentY, 16, 16, 'FD');
               }
             } else {
               // Placeholder rectangle
               doc.setDrawColor(200, 200, 200);
               doc.setFillColor(240, 240, 240);
-              doc.rect(xPos, currentY, 20, 20, 'FD');
+              doc.rect(xPos, currentY, 16, 16, 'FD');
               doc.setTextColor(150, 150, 150);
-              doc.setFontSize(8);
-              doc.text("Sin foto", xPos + 10, currentY + 11, { align: 'center' });
+              doc.setFontSize(7);
+              doc.text("Sin foto", xPos + 8, currentY + 9, { align: 'center' });
             }
             
             // Draw Name and Dorsal
             doc.setTextColor(0, 0, 0);
-            doc.setFontSize(9);
+            doc.setFontSize(8);
             doc.setFont("helvetica", "bold");
             
             // Shorten name if too long (take first 2 parts usually)
             const nameParts = jugador.nombre.split(' ');
             const shortName = nameParts.length > 2 ? `${nameParts[0]} ${nameParts[1]}` : jugador.nombre;
             
-            doc.text(shortName, xPos, currentY + 25, { maxWidth: colWidth - 2 });
+            doc.text(shortName, xPos, currentY + 20, { maxWidth: colWidth - 2 });
             
             doc.setFont("helvetica", "normal");
-            doc.setFontSize(8);
+            doc.setFontSize(7);
             doc.setTextColor(100, 100, 100);
-            doc.text(`Dorsal: ${jugador.dorsal || '-'}`, xPos, currentY + 30);
+            doc.text(`Dorsal: ${jugador.dorsal || '-'}`, xPos, currentY + 24);
             
             currentColumn++;
           }
           
           // Move Y down for the next position group
-          currentY += rowMaxHeight + 5;
+          currentY += rowMaxHeight + 2;
         }
       }
       
