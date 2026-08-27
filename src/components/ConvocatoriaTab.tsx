@@ -390,13 +390,13 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
         doc.text(obsLines, 18, nextLineY + 6);
       }
       
-      currentY += boxHeight + 15;
+      currentY += boxHeight + 10;
       
       // --- PLAYERS SECTION ---
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
+      doc.setFontSize(13);
       doc.text(`Jugadores Convocados (${selectedJugadores.length})`, 14, currentY);
-      currentY += 10;
+      currentY += 8;
       
       const convocados = jugadores.filter(j => selectedJugadores.includes(j.id));
       const posiciones = ['Portero', 'Defensa', 'Centrocampista', 'Delantero'];
@@ -413,28 +413,40 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       });
       await Promise.all(imagePromises);
       
-      // Draw grid
-      const cols = 5;
+      // Calculate dynamic sizing to force 1 page
+      const cols = 6;
       const colWidth = (pageWidth - 28) / cols;
+      
+      const availableSpace = 288 - currentY;
+      
+      let totalRowsNeeded = 0;
+      let activePosCount = 0;
+      for (const pos of posiciones) {
+        const count = convocados.filter(j => j.demarcacion === pos).length;
+        if (count > 0) {
+          activePosCount++;
+          totalRowsNeeded += Math.ceil(count / cols);
+        }
+      }
+      
+      // Subtract space for position headers (approx 5.5 units each) + small padding
+      const spaceForRows = availableSpace - (activePosCount * 5.5);
+      
+      // Cap height so it doesn't look ridiculous if there's tons of space
+      const rowMaxHeight = Math.min(26, Math.max(16, Math.floor(spaceForRows / Math.max(1, totalRowsNeeded))));
+      const avatarSize = Math.max(10, rowMaxHeight - 11);
       
       for (const pos of posiciones) {
         const jugadoresPos = convocados.filter(j => j.demarcacion === pos);
         if (jugadoresPos.length > 0) {
           
-          // Check page bounds before drawing position header
-          if (currentY > 270) {
-            doc.addPage();
-            currentY = 20;
-          }
-          
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(11);
+          doc.setFontSize(10);
           doc.setTextColor(220, 38, 38);
           doc.text(pos.toUpperCase() + 'S', 14, currentY);
-          currentY += 6;
+          currentY += 5;
           
           let currentColumn = 0;
-          let rowMaxHeight = 28; // height allocated for a row of players
           
           for (let i = 0; i < jugadoresPos.length; i++) {
             const jugador = jugadoresPos[i];
@@ -443,11 +455,6 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
             if (currentColumn >= cols) {
               currentColumn = 0;
               currentY += rowMaxHeight;
-              
-              if (currentY > 270) {
-                doc.addPage();
-                currentY = 20;
-              }
             }
             
             const xPos = 14 + (currentColumn * colWidth);
@@ -456,44 +463,44 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
             const photoB64 = playerImages[jugador.id];
             if (photoB64) {
               try {
-                doc.addImage(photoB64, 'PNG', xPos, currentY, 16, 16);
+                doc.addImage(photoB64, 'PNG', xPos, currentY, avatarSize, avatarSize);
               } catch (e) {
                 // fallback if drawing fails
                 doc.setDrawColor(200, 200, 200);
                 doc.setFillColor(240, 240, 240);
-                doc.rect(xPos, currentY, 16, 16, 'FD');
+                doc.rect(xPos, currentY, avatarSize, avatarSize, 'FD');
               }
             } else {
               // Placeholder rectangle
               doc.setDrawColor(200, 200, 200);
               doc.setFillColor(240, 240, 240);
-              doc.rect(xPos, currentY, 16, 16, 'FD');
+              doc.rect(xPos, currentY, avatarSize, avatarSize, 'FD');
               doc.setTextColor(150, 150, 150);
-              doc.setFontSize(7);
-              doc.text("Sin foto", xPos + 8, currentY + 9, { align: 'center' });
+              doc.setFontSize(avatarSize / 2.5);
+              doc.text("Sin foto", xPos + (avatarSize/2), currentY + (avatarSize/2) + 1, { align: 'center' });
             }
             
             // Draw Name and Dorsal
             doc.setTextColor(0, 0, 0);
-            doc.setFontSize(8);
+            doc.setFontSize(7.5);
             doc.setFont("helvetica", "bold");
             
-            // Shorten name if too long (take first 2 parts usually)
+            // Shorten name if too long
             const nameParts = jugador.nombre.split(' ');
             const shortName = nameParts.length > 2 ? `${nameParts[0]} ${nameParts[1]}` : jugador.nombre;
             
-            doc.text(shortName, xPos, currentY + 20, { maxWidth: colWidth - 2 });
+            doc.text(shortName, xPos, currentY + avatarSize + 4, { maxWidth: colWidth - 1 });
             
             doc.setFont("helvetica", "normal");
-            doc.setFontSize(7);
+            doc.setFontSize(6.5);
             doc.setTextColor(100, 100, 100);
-            doc.text(`Dorsal: ${jugador.dorsal || '-'}`, xPos, currentY + 24);
+            doc.text(`Dorsal: ${jugador.dorsal || '-'}`, xPos, currentY + avatarSize + 7.5);
             
             currentColumn++;
           }
           
           // Move Y down for the next position group
-          currentY += rowMaxHeight + 2;
+          currentY += rowMaxHeight + 1.5;
         }
       }
       
