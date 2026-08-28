@@ -126,6 +126,8 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
     como_ir: '',
   });
 
+  const [showDorsal, setShowDorsal] = useState(true);
+
   useEffect(() => {
     fetchData();
   }, [matchId]);
@@ -492,12 +494,14 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
             const nameLines = doc.splitTextToSize(shortName, colWidth - 1);
             doc.text(nameLines, xPos, currentY + avatarSize + 4);
             
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(6.5);
-            doc.setTextColor(100, 100, 100);
-            // offset the dorsal based on number of lines in the name
-            const dorsalYOffset = currentY + avatarSize + 4 + (nameLines.length * 3.5);
-            doc.text(`Dorsal: ${jugador.dorsal || '-'}`, xPos, dorsalYOffset);
+            if (showDorsal) {
+              doc.setFont("helvetica", "normal");
+              doc.setFontSize(6.5);
+              doc.setTextColor(100, 100, 100);
+              // offset the dorsal based on number of lines in the name
+              const dorsalYOffset = currentY + avatarSize + 4 + (nameLines.length * 3.5);
+              doc.text(`Dorsal: ${jugador.dorsal || '-'}`, xPos, dorsalYOffset);
+            }
             
             currentColumn++;
           }
@@ -673,7 +677,16 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
               {selectedJugadores.length}
             </span>
           </h3>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-2 text-sm font-bold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white mr-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={showDorsal} 
+                onChange={(e) => setShowDorsal(e.target.checked)}
+                className="w-4 h-4 rounded text-red-600 focus:ring-red-500 border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+              />
+              Mostrar Dorsal
+            </label>
             <button 
               onClick={selectAll}
               className="text-sm font-bold text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors"
@@ -735,7 +748,7 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
                           )}>
                             {jugador.nombre}
                           </p>
-                          {jugador.dorsal && (
+                          {showDorsal && jugador.dorsal && (
                             <p className="text-xs font-medium text-neutral-500 mt-0.5">Dorsal {jugador.dorsal}</p>
                           )}
                         </div>
