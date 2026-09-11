@@ -344,33 +344,33 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
         obsLines = doc.splitTextToSize(formData.observaciones, pageWidth - 36);
       }
       
-      // Calculate dynamic box height
-      let boxHeight = 45 + ((indumentariaLines.length - 1) * 5);
-      if (hasComoIr) boxHeight += 10;
-      if (hasObservaciones) boxHeight += 10 + (obsLines.length * 5);
+      // Calculate dynamic box height (tighter spacing to save space for photos)
+      let boxHeight = 28 + (indumentariaLines.length * 5);
+      if (hasComoIr) boxHeight += 6;
+      if (hasObservaciones) boxHeight += 5 + (obsLines.length * 5);
       
       doc.roundedRect(14, currentY, pageWidth - 28, boxHeight, 3, 3, 'FD');
       
       doc.setFont("helvetica", "bold");
-      doc.text("Detalles de la Citación:", 18, currentY + 10);
+      doc.text("Detalles de la Citación:", 18, currentY + 8);
       
       doc.setFont("helvetica", "normal");
       
       // Resaltar la hora de citación
       doc.setFont("helvetica", "bold");
       doc.setTextColor(220, 38, 38); // Red
-      doc.text(`Hora de citación: ${formData.hora_citacion || 'Por definir'}`, 18, currentY + 18);
+      doc.text(`Hora de citación: ${formData.hora_citacion || 'Por definir'}`, 18, currentY + 14);
       
       // Reset font for the rest
       doc.setFont("helvetica", "normal");
       doc.setTextColor(0, 0, 0); // Black
       
-      doc.text(`Lugar de citación: ${formData.lugar_citacion || 'Por definir'}`, 18, currentY + 26);
-      doc.text(`Hora del partido: ${formData.hora_partido || 'Por definir'}`, 100, currentY + 18);
+      doc.text(`Lugar de citación: ${formData.lugar_citacion || 'Por definir'}`, 18, currentY + 20);
+      doc.text(`Hora del partido: ${formData.hora_partido || 'Por definir'}`, 100, currentY + 14);
       
-      doc.text(indumentariaLines, 18, currentY + 34);
+      doc.text(indumentariaLines, 18, currentY + 26);
       
-      let nextLineY = currentY + 44 + ((indumentariaLines.length - 1) * 5);
+      let nextLineY = currentY + 26 + (indumentariaLines.length * 5);
       
       if (hasComoIr) {
         doc.setFont("helvetica", "bold");
@@ -381,7 +381,7 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
         doc.textWithLink("Abrir ubicación en Google Maps", 36, nextLineY, { url: formData.como_ir });
         doc.setTextColor(0, 0, 0); // Reset color
         
-        nextLineY += 10;
+        nextLineY += 6;
       }
       
       if (hasObservaciones) {
@@ -389,16 +389,16 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
         doc.text("Observaciones:", 18, nextLineY);
         doc.setFont("helvetica", "normal");
         
-        doc.text(obsLines, 18, nextLineY + 6);
+        doc.text(obsLines, 18, nextLineY + 5);
       }
       
-      currentY += boxHeight + 10;
+      currentY += boxHeight + 6;
       
       // --- PLAYERS SECTION ---
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
       doc.text(`Jugadores Convocados (${selectedJugadores.length})`, 14, currentY);
-      currentY += 8;
+      currentY += 6;
       
       const convocados = jugadores.filter(j => selectedJugadores.includes(j.id));
       const posiciones = ['Portero', 'Defensa', 'Centrocampista', 'Delantero'];
@@ -437,8 +437,12 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       
       // Cap height so it doesn't look ridiculous if there's tons of space
       const minRowHeight = showDorsal ? 19 : 14;
-      const rowMaxHeight = Math.min(32, Math.max(minRowHeight, Math.floor(spaceForRows / Math.max(1, totalRowsNeeded))));
-      const avatarSize = Math.max(8, rowMaxHeight - (showDorsal ? 13 : 10));
+      const rowMaxHeight = Math.min(45, Math.max(minRowHeight, Math.floor(spaceForRows / Math.max(1, totalRowsNeeded))));
+      
+      // Also cap avatar size so it doesn't exceed column width
+      let rawAvatar = rowMaxHeight - (showDorsal ? 13 : 10);
+      const maxAvatar = colWidth - 2;
+      const avatarSize = Math.min(maxAvatar, Math.max(8, rawAvatar));
       
       for (const pos of posiciones) {
         const jugadoresPos = convocados.filter(j => j.demarcacion === pos);
