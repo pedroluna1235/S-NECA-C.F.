@@ -431,13 +431,14 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
         }
       }
       
-      // Subtract space for position headers (approx 5.5 units each) + small padding
-      const spaceForRows = availableSpace - (activePosCount * 5.5);
+      // Subtract space for position headers (5 text + padding at the end)
+      const headerSpace = 5 + (showDorsal ? 9 : 2);
+      const spaceForRows = availableSpace - (activePosCount * headerSpace);
       
       // Cap height so it doesn't look ridiculous if there's tons of space
-      const minRowHeight = showDorsal ? 24 : 16;
+      const minRowHeight = showDorsal ? 19 : 14;
       const rowMaxHeight = Math.min(32, Math.max(minRowHeight, Math.floor(spaceForRows / Math.max(1, totalRowsNeeded))));
-      const avatarSize = Math.max(10, rowMaxHeight - (showDorsal ? 14 : 11));
+      const avatarSize = Math.max(8, rowMaxHeight - (showDorsal ? 13 : 10));
       
       for (const pos of posiciones) {
         const jugadoresPos = convocados.filter(j => j.demarcacion === pos);
@@ -512,7 +513,7 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
           }
           
           // Move Y down for the next position group
-          currentY += rowMaxHeight + (showDorsal ? 8 : 2);
+          currentY += rowMaxHeight + (showDorsal ? 9 : 2);
         }
       }
       
