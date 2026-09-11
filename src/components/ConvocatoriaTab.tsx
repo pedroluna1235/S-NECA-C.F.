@@ -435,8 +435,9 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
       const spaceForRows = availableSpace - (activePosCount * 5.5);
       
       // Cap height so it doesn't look ridiculous if there's tons of space
-      const rowMaxHeight = Math.min(26, Math.max(16, Math.floor(spaceForRows / Math.max(1, totalRowsNeeded))));
-      const avatarSize = Math.max(10, rowMaxHeight - 11);
+      const minRowHeight = showDorsal ? 24 : 16;
+      const rowMaxHeight = Math.min(32, Math.max(minRowHeight, Math.floor(spaceForRows / Math.max(1, totalRowsNeeded))));
+      const avatarSize = Math.max(10, rowMaxHeight - (showDorsal ? 14 : 11));
       
       for (const pos of posiciones) {
         const jugadoresPos = convocados.filter(j => j.demarcacion === pos);
@@ -492,22 +493,26 @@ export function ConvocatoriaTab({ matchId }: ConvocatoriaTabProps) {
             const shortName = nameParts.length > 2 ? `${nameParts[0]} ${nameParts[1]}` : jugador.nombre;
             
             const nameLines = doc.splitTextToSize(shortName, colWidth - 1);
-            doc.text(nameLines, xPos, currentY + avatarSize + 4);
+            
+            let textY = currentY + avatarSize + 4;
+            for (let l = 0; l < Math.min(nameLines.length, 2); l++) {
+              if (l > 0) textY += 3.2;
+              doc.text(nameLines[l], xPos, textY);
+            }
             
             if (showDorsal) {
               doc.setFont("helvetica", "normal");
               doc.setFontSize(6.5);
               doc.setTextColor(100, 100, 100);
-              // offset the dorsal based on number of lines in the name
-              const dorsalYOffset = currentY + avatarSize + 4 + (nameLines.length * 3.5);
-              doc.text(`Dorsal: ${jugador.dorsal || '-'}`, xPos, dorsalYOffset);
+              textY += 3.5;
+              doc.text(`Dorsal: ${jugador.dorsal || '-'}`, xPos, textY);
             }
             
             currentColumn++;
           }
           
           // Move Y down for the next position group
-          currentY += rowMaxHeight + 1.5;
+          currentY += rowMaxHeight + (showDorsal ? 8 : 2);
         }
       }
       
