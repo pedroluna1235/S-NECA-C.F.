@@ -7,7 +7,7 @@ import { PlayerDetailModal } from '../components/PlayerDetailModal';
 import { useAuth } from '../contexts/AuthContext';
 
 export function Plantilla() {
-  const { role } = useAuth();
+  const { role, showHiddenPlayers } = useAuth();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,8 +19,6 @@ export function Plantilla() {
   // Modal de Detalle (Radar)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [playerToView, setPlayerToView] = useState<Player | null>(null);
-
-  const [mostrarOcultos, setMostrarOcultos] = useState(false);
 
   const isHiddenPlayer = (nombre: string) => {
     const n = nombre.toLowerCase();
@@ -91,7 +89,7 @@ export function Plantilla() {
     const nombreStr = p.nombre || '';
     const demarcacionStr = p.demarcacion || '';
     
-    if (!mostrarOcultos && isHiddenPlayer(nombreStr)) {
+    if (!showHiddenPlayers && isHiddenPlayer(nombreStr)) {
       return false;
     }
 
@@ -122,17 +120,6 @@ export function Plantilla() {
               className="w-full sm:w-64 pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-shadow"
             />
           </div>
-          
-          <button 
-            onClick={() => setMostrarOcultos(!mostrarOcultos)}
-            className={`px-3 py-2 rounded-xl border text-sm font-medium transition-colors shadow-sm ${
-              mostrarOcultos 
-                ? 'bg-neutral-800 text-white border-neutral-800 dark:bg-white dark:text-neutral-900 dark:border-white' 
-                : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50 dark:bg-neutral-900 dark:text-neutral-300 dark:border-neutral-800 dark:hover:bg-neutral-800'
-            }`}
-          >
-            {mostrarOcultos ? 'Ocultar extras' : 'Mostrar extras'}
-          </button>
           
           <button 
             onClick={fetchPlayers}

@@ -6,6 +6,8 @@ interface AuthContextType {
   role: Role;
   login: (password: string) => boolean;
   logout: () => void;
+  showHiddenPlayers: boolean;
+  toggleHiddenPlayers: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -13,6 +15,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [role, setRole] = useState<Role>('no_autenticado');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showHiddenPlayers, setShowHiddenPlayers] = useState(() => {
+    return localStorage.getItem('seneca_show_hidden') === 'true';
+  });
 
   useEffect(() => {
     // Check localStorage on mount
@@ -46,11 +51,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('seneca_role');
   };
 
+  const toggleHiddenPlayers = () => {
+    setShowHiddenPlayers(prev => {
+      const next = !prev;
+      localStorage.setItem('seneca_show_hidden', String(next));
+      return next;
+    });
+  };
+
   // Don't render children until we've checked localStorage
   if (!isInitialized) return null;
 
   return (
-    <AuthContext.Provider value={{ role, login, logout }}>
+    <AuthContext.Provider value={{ role, login, logout, showHiddenPlayers, toggleHiddenPlayers }}>
       {children}
     </AuthContext.Provider>
   );

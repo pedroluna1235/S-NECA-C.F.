@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  const { logout, role } = useAuth();
+  const { logout, role, showHiddenPlayers, toggleHiddenPlayers } = useAuth();
   const navigate = useNavigate();
 
   // Inicializar tema
@@ -77,20 +77,36 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={() => setIsOpen(false)}
-              className={({ isActive }) => cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200",
-                isActive 
-                  ? "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-500" 
-                  : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-white"
+            <div key={item.to} className="flex flex-col">
+              <NavLink
+                to={item.to}
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) => cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200",
+                  isActive 
+                    ? "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-500" 
+                    : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-white"
+                )}
+              >
+                <item.icon size={20} className="transition-transform duration-200 group-hover:scale-110" />
+                {item.label}
+              </NavLink>
+              
+              {item.to === '/plantilla' && (
+                <button
+                  onClick={toggleHiddenPlayers}
+                  className={cn(
+                    "ml-4 mt-1 flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
+                    showHiddenPlayers
+                      ? "text-red-600 bg-red-50 dark:text-red-500 dark:bg-red-500/10"
+                      : "text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 dark:text-neutral-500 dark:hover:text-white dark:hover:bg-neutral-900"
+                  )}
+                >
+                  <Eye size={16} />
+                  {showHiddenPlayers ? 'Ocultar extras' : 'Mostrar extras'}
+                </button>
               )}
-            >
-              <item.icon size={20} className="transition-transform duration-200 group-hover:scale-110" />
-              {item.label}
-            </NavLink>
+            </div>
           ))}
         </nav>
 
