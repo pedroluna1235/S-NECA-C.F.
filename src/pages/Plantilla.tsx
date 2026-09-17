@@ -20,6 +20,13 @@ export function Plantilla() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [playerToView, setPlayerToView] = useState<Player | null>(null);
 
+  const [mostrarOcultos, setMostrarOcultos] = useState(false);
+
+  const isHiddenPlayer = (nombre: string) => {
+    const n = nombre.toLowerCase();
+    return n.includes('javier valverde') || n.includes('carlos gonzález') || n.includes('carlos gonzalez');
+  };
+
   const fetchPlayers = async () => {
     setLoading(true);
     try {
@@ -83,6 +90,11 @@ export function Plantilla() {
   const filteredPlayers = players.filter(p => {
     const nombreStr = p.nombre || '';
     const demarcacionStr = p.demarcacion || '';
+    
+    if (!mostrarOcultos && isHiddenPlayer(nombreStr)) {
+      return false;
+    }
+
     return nombreStr.toLowerCase().includes(searchTerm.toLowerCase()) || 
            demarcacionStr.toLowerCase().includes(searchTerm.toLowerCase());
   });
@@ -110,6 +122,17 @@ export function Plantilla() {
               className="w-full sm:w-64 pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-shadow"
             />
           </div>
+          
+          <button 
+            onClick={() => setMostrarOcultos(!mostrarOcultos)}
+            className={`px-3 py-2 rounded-xl border text-sm font-medium transition-colors shadow-sm ${
+              mostrarOcultos 
+                ? 'bg-neutral-800 text-white border-neutral-800 dark:bg-white dark:text-neutral-900 dark:border-white' 
+                : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50 dark:bg-neutral-900 dark:text-neutral-300 dark:border-neutral-800 dark:hover:bg-neutral-800'
+            }`}
+          >
+            {mostrarOcultos ? 'Ocultar extras' : 'Mostrar extras'}
+          </button>
           
           <button 
             onClick={fetchPlayers}

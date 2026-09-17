@@ -37,6 +37,11 @@ export function DisenadorSesion({ onSesionGuardada, initialDatos, sesionIdToEdit
 
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   
+  const isHiddenPlayer = (nombre: string) => {
+    const n = nombre.toLowerCase();
+    return n.includes('javier valverde') || n.includes('carlos gonzález') || n.includes('carlos gonzalez');
+  };
+
   const [datos, setDatos] = useState<DatosDisenoSesion>(initialDatos || {
     cabecera: {
       objetivo: '',
@@ -86,7 +91,7 @@ export function DisenadorSesion({ onSesionGuardada, initialDatos, sesionIdToEdit
             jugadores: data.map(j => ({
               id: j.id,
               nombre: j.nombre,
-              disponible: true
+              disponible: !isHiddenPlayer(j.nombre)
             }))
           }));
         }
@@ -505,13 +510,16 @@ export function DisenadorSesion({ onSesionGuardada, initialDatos, sesionIdToEdit
                 className={`p-2 rounded-lg text-sm font-medium cursor-pointer transition-all flex items-center justify-between border ${
                   jugador.disponible 
                     ? (jugador.manual ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400' : 'bg-neutral-50 dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800 hover:border-red-300')
-                    : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 opacity-80'
+                    : (isHiddenPlayer(jugador.nombre) 
+                        ? 'bg-neutral-100 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 text-neutral-500 opacity-60' 
+                        : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 opacity-80')
                 }`}
               >
                 <span className="truncate">{i+1}. {jugador.nombre}</span>
                 <div className="flex items-center gap-2">
                   {jugador.manual && jugador.disponible && <span className="text-xs bg-blue-100 dark:bg-blue-800 px-1.5 py-0.5 rounded text-blue-800 dark:text-blue-100">EXTRA</span>}
-                  {!jugador.disponible && <span className="text-xs bg-red-200 dark:bg-red-800 px-2 py-0.5 rounded text-red-800 dark:text-red-100">BAJA</span>}
+                  {!jugador.disponible && !isHiddenPlayer(jugador.nombre) && <span className="text-xs bg-red-200 dark:bg-red-800 px-2 py-0.5 rounded text-red-800 dark:text-red-100">BAJA</span>}
+                  {!jugador.disponible && isHiddenPlayer(jugador.nombre) && <span className="text-xs bg-neutral-200 dark:bg-neutral-800 px-2 py-0.5 rounded text-neutral-600 dark:text-neutral-400">OCULTO</span>}
                 </div>
               </div>
             ))}

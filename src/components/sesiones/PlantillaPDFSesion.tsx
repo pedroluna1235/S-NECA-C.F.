@@ -163,7 +163,11 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
             <div className="border" style={styles.borderBlack}>
               <div className="border-b p-1 font-bold text-center" style={{ ...styles.borderBlack, ...styles.bgGray }}>JUGADORES DISPONIBLES</div>
               <div className="flex flex-col">
-                {datos.jugadores.map((jugador, index) => (
+                {datos.jugadores.filter(j => {
+                  const isHidden = j.nombre.toLowerCase().includes('javier valverde') || j.nombre.toLowerCase().includes('carlos gonzález') || j.nombre.toLowerCase().includes('carlos gonzalez');
+                  if (isHidden) return j.disponible;
+                  return true;
+                }).map((jugador, index) => (
                   <div 
                     key={jugador.id} 
                     className={`border-b py-2 px-2 flex items-center justify-center text-xs leading-normal text-center ${
