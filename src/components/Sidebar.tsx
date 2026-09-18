@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  const { logout, role, showHiddenPlayers, toggleHiddenPlayers } = useAuth();
+  const { logout, role } = useAuth();
   const navigate = useNavigate();
 
   // Inicializar tema
