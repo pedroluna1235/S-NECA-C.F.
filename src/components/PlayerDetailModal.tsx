@@ -90,9 +90,9 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
   
   // State for editable stats
   const [gustos, setGustos] = useState('');
-  const [statsConBalon, setStatsConBalon] = useState(DEFAULT_STATS_CON_BALON);
-  const [statsSinBalon, setStatsSinBalon] = useState(DEFAULT_STATS_SIN_BALON);
-  const [statsFisico, setStatsFisico] = useState(DEFAULT_STATS_FISICO);
+  const [statsConBalon, setStatsConBalon] = useState<any>(DEFAULT_STATS_CON_BALON);
+  const [statsSinBalon, setStatsSinBalon] = useState<any>(DEFAULT_STATS_SIN_BALON);
+  const [statsFisico, setStatsFisico] = useState<any>(DEFAULT_STATS_FISICO);
 
   // State for calculated stats
   const [autoStats, setAutoStats] = useState({ minutos: 0, goles: 0, notaMedia: 0 });
