@@ -20,6 +20,9 @@ const DEFAULT_STATS_CON_BALON = { pase_corto: 50, disparo: 50, vision: 50, contr
 const DEFAULT_STATS_SIN_BALON = { presion: 50, recuperacion: 50, posicionamiento: 50, marcaje: 50, anticipacion: 50 };
 const DEFAULT_STATS_FISICO = { velocidad: 50, salto: 50, agilidad: 50, resistencia: 50, fuerza: 50 };
 
+const DEFAULT_STATS_CON_BALON_POR = { pase_corto: 50, pase_largo: 50, saque_mano: 50, control: 50, juego_pies: 50 };
+const DEFAULT_STATS_SIN_BALON_POR = { reflejos: 50, blocaje: 50, salidas: 50, uno_vs_uno: 50, posicionamiento: 50 };
+
 export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: PlayerDetailModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
@@ -98,8 +101,20 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
   useEffect(() => {
     if (isOpen && player) {
       setGustos(player.gustos || '');
-      setStatsConBalon(player.stats_con_balon || DEFAULT_STATS_CON_BALON);
-      setStatsSinBalon(player.stats_sin_balon || DEFAULT_STATS_SIN_BALON);
+      const isPor = player.demarcacion === 'Portero';
+      
+      let initConBalon = player.stats_con_balon;
+      if (!initConBalon || (isPor && initConBalon.regate !== undefined) || (!isPor && initConBalon.pase_largo !== undefined)) {
+        initConBalon = isPor ? DEFAULT_STATS_CON_BALON_POR : DEFAULT_STATS_CON_BALON;
+      }
+
+      let initSinBalon = player.stats_sin_balon;
+      if (!initSinBalon || (isPor && initSinBalon.marcaje !== undefined) || (!isPor && initSinBalon.blocaje !== undefined)) {
+        initSinBalon = isPor ? DEFAULT_STATS_SIN_BALON_POR : DEFAULT_STATS_SIN_BALON;
+      }
+      
+      setStatsConBalon(initConBalon);
+      setStatsSinBalon(initSinBalon);
       setStatsFisico(player.stats_fisico || DEFAULT_STATS_FISICO);
       
       // Fetch evaluations for this player
@@ -186,20 +201,34 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
     }
   };
 
-  const conBalonData = [
-    { subject: 'Pase corto', A: statsConBalon.pase_corto },
-    { subject: 'Regate', A: statsConBalon.regate },
-    { subject: 'Control', A: statsConBalon.control },
-    { subject: 'Visión', A: statsConBalon.vision },
-    { subject: 'Disparo', A: statsConBalon.disparo },
+  const isPortero = player.demarcacion === 'Portero';
+
+  const conBalonData = isPortero ? [
+    { subject: 'Pase corto', A: statsConBalon.pase_corto || 0 },
+    { subject: 'Pase largo', A: statsConBalon.pase_largo || 0 },
+    { subject: 'Saque mano', A: statsConBalon.saque_mano || 0 },
+    { subject: 'Control', A: statsConBalon.control || 0 },
+    { subject: 'Juego pies', A: statsConBalon.juego_pies || 0 },
+  ] : [
+    { subject: 'Pase corto', A: statsConBalon.pase_corto || 0 },
+    { subject: 'Regate', A: statsConBalon.regate || 0 },
+    { subject: 'Control', A: statsConBalon.control || 0 },
+    { subject: 'Visión', A: statsConBalon.vision || 0 },
+    { subject: 'Disparo', A: statsConBalon.disparo || 0 },
   ];
 
-  const sinBalonData = [
-    { subject: 'Presión', A: statsSinBalon.presion },
-    { subject: 'Anticipación', A: statsSinBalon.anticipacion },
-    { subject: 'Marcaje', A: statsSinBalon.marcaje },
-    { subject: 'Posicionamiento', A: statsSinBalon.posicionamiento },
-    { subject: 'Recuperación', A: statsSinBalon.recuperacion },
+  const sinBalonData = isPortero ? [
+    { subject: 'Reflejos', A: statsSinBalon.reflejos || 0 },
+    { subject: 'Blocaje', A: statsSinBalon.blocaje || 0 },
+    { subject: 'Salidas', A: statsSinBalon.salidas || 0 },
+    { subject: '1 vs 1', A: statsSinBalon.uno_vs_uno || 0 },
+    { subject: 'Colocación', A: statsSinBalon.posicionamiento || 0 },
+  ] : [
+    { subject: 'Presión', A: statsSinBalon.presion || 0 },
+    { subject: 'Anticipación', A: statsSinBalon.anticipacion || 0 },
+    { subject: 'Marcaje', A: statsSinBalon.marcaje || 0 },
+    { subject: 'Posicionamiento', A: statsSinBalon.posicionamiento || 0 },
+    { subject: 'Recuperación', A: statsSinBalon.recuperacion || 0 },
   ];
 
   const fisicoData = [
@@ -401,7 +430,7 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
               {Object.keys(statsConBalon).map(key => (
                 <div key={key} className="space-y-1">
                   <div className="flex justify-between text-xs font-bold text-neutral-500 uppercase">
-                    <span>{key.replace('_', ' ')}</span>
+                    <span>{key.replace(/_/g, ' ')}</span>
                     <span className="text-neutral-900 dark:text-white">{statsConBalon[key as keyof typeof statsConBalon]}</span>
                   </div>
                   <input 
@@ -424,7 +453,7 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
               {Object.keys(statsSinBalon).map(key => (
                 <div key={key} className="space-y-1">
                   <div className="flex justify-between text-xs font-bold text-neutral-500 uppercase">
-                    <span>{key}</span>
+                    <span>{key.replace(/_/g, ' ')}</span>
                     <span className="text-neutral-900 dark:text-white">{statsSinBalon[key as keyof typeof statsSinBalon]}</span>
                   </div>
                   <input 
@@ -447,7 +476,7 @@ export function PlayerDetailModal({ isOpen, onClose, player, onSuccess }: Player
               {Object.keys(statsFisico).map(key => (
                 <div key={key} className="space-y-1">
                   <div className="flex justify-between text-xs font-bold text-neutral-500 uppercase">
-                    <span>{key}</span>
+                    <span>{key.replace(/_/g, ' ')}</span>
                     <span className="text-neutral-900 dark:text-white">{statsFisico[key as keyof typeof statsFisico]}</span>
                   </div>
                   <input 
