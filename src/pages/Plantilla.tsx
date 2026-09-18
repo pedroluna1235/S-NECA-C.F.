@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, RefreshCcw, Search } from 'lucide-react';
+import { Plus, RefreshCcw, Search, Eye } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { PlayerCard, type Player } from '../components/PlayerCard';
 import { PlayerModal } from '../components/PlayerModal';
@@ -97,15 +97,26 @@ export function Plantilla() {
            demarcacionStr.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  const { toggleHiddenPlayers } = useAuth();
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Cabecera */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">Plantilla</h2>
-          <p className="text-neutral-500 dark:text-neutral-400 mt-1">
-            Gestiona los jugadores del Prebenjamín A
-          </p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="text-neutral-500 dark:text-neutral-400">
+              Gestiona los jugadores del Prebenjamín A
+            </p>
+            <button
+              onClick={toggleHiddenPlayers}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+            >
+              <Eye size={14} />
+              {showHiddenPlayers ? 'Ocultar Extras' : 'Mostrar Extras'}
+            </button>
+          </div>
         </div>
         
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
