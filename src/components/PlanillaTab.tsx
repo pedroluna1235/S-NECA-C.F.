@@ -8,11 +8,15 @@ interface PlanillaTabProps {
   matchId: string;
 }
 
+const SISTEMAS = ['1-2-3-1', '1-3-2-1', '1-3-1-2', '1-2-2-2'];
+
 interface JugadorPlanilla {
   id: string;
   nombre: string;
   dorsal: string;
   titular: boolean;
+  posicion?: string;
+  notas?: string;
 }
 
 interface EventoPlanilla {
@@ -36,6 +40,10 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
     arbitros: '',
     clima: '',
     mvp: '',
+    sistema_ataque: '1-2-3-1',
+    sistema_defensa: '1-3-2-1',
+    sistema_ataque_rival: '1-2-3-1',
+    sistema_defensa_rival: '1-3-2-1',
   });
 
   const [localPlayers, setLocalPlayers] = useState<JugadorPlanilla[]>([]);
@@ -43,7 +51,7 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
   const [eventos, setEventos] = useState<EventoPlanilla[]>([]);
 
   // Add rival form
-  const [newRival, setNewRival] = useState({ nombre: '', dorsal: '', titular: false });
+  const [newRival, setNewRival] = useState({ nombre: '', dorsal: '', titular: false, posicion: '' });
 
   // Event modal form
   const [activeEventPrompt, setActiveEventPrompt] = useState<{jugadorId: string, isLocal: boolean} | null>(null);
@@ -97,6 +105,10 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
           arbitros: planillaData.arbitros || '',
           clima: planillaData.clima || '',
           mvp: planillaData.mvp || '',
+          sistema_ataque: planillaData.sistema_ataque || '1-2-3-1',
+          sistema_defensa: planillaData.sistema_defensa || '1-3-2-1',
+          sistema_ataque_rival: planillaData.sistema_ataque_rival || '1-2-3-1',
+          sistema_defensa_rival: planillaData.sistema_defensa_rival || '1-3-2-1',
         });
 
         // Local
@@ -148,9 +160,11 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
       id: uuidv4(), 
       nombre: newRival.nombre, 
       dorsal: newRival.dorsal, 
-      titular: newRival.titular 
+      titular: newRival.titular,
+      posicion: newRival.posicion,
+      notas: ''
     }]);
-    setNewRival({ nombre: '', dorsal: '', titular: false });
+    setNewRival({ nombre: '', dorsal: '', titular: false, posicion: '' });
   };
 
   const removeRival = (id: string) => {
@@ -165,6 +179,10 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
     } else {
       setRivalPlayers(rivalPlayers.map(p => p.id === id ? { ...p, titular } : p));
     }
+  };
+
+  const updateRivalField = (id: string, field: 'posicion' | 'notas', value: string) => {
+    setRivalPlayers(rivalPlayers.map(p => p.id === id ? { ...p, [field]: value } : p));
   };
 
   const openEventPrompt = (jugadorId: string, isLocal: boolean) => {
@@ -290,6 +308,25 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
           </div>
         </div>
 
+        {!isLocal && (
+          <div className="flex flex-col gap-1.5 mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+            <input 
+              type="text" 
+              placeholder="Posición (ej. Lateral, DFD, POR...)" 
+              value={jugador.posicion || ''} 
+              onChange={e => updateRivalField(jugador.id, 'posicion', e.target.value)} 
+              className="w-full text-xs px-2 py-1.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md outline-none focus:border-neutral-400"
+            />
+            <textarea 
+              placeholder="Anotaciones sobre este jugador..." 
+              value={jugador.notas || ''} 
+              onChange={e => updateRivalField(jugador.id, 'notas', e.target.value)} 
+              rows={2}
+              className="w-full text-xs px-2 py-1.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md outline-none focus:border-neutral-400 resize-none"
+            />
+          </div>
+        )}
+
         {/* Formulario Inline de Evento */}
         {activeEventPrompt?.jugadorId === jugador.id ? (
           <div className="mt-2 p-2.5 bg-white dark:bg-neutral-950 rounded-lg border border-neutral-200 dark:border-neutral-800 flex flex-wrap items-center gap-2 text-sm shadow-sm">
@@ -396,7 +433,7 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
         
         {/* SÉNECA C.F. ALINEACIÓN */}
         <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col h-full">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2">
               <Users className="text-red-500" size={20} />
               SÉNECA C.F.
@@ -404,6 +441,21 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
             <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 px-2.5 py-1 rounded-lg text-sm font-bold">
               {localPlayers.length} Jugadores
             </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Sistema Ataque</label>
+              <select name="sistema_ataque" value={formData.sistema_ataque} onChange={handleInputChange} className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all text-sm font-medium">
+                {SISTEMAS.map(sys => <option key={sys} value={sys}>{sys}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Sistema Defensa</label>
+              <select name="sistema_defensa" value={formData.sistema_defensa} onChange={handleInputChange} className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all text-sm font-medium">
+                {SISTEMAS.map(sys => <option key={sys} value={sys}>{sys}</option>)}
+              </select>
+            </div>
           </div>
 
           <div className="space-y-3 flex-1">
@@ -425,7 +477,7 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
 
         {/* EQUIPO RIVAL ALINEACIÓN */}
         <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col h-full">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2">
               <Users className="text-neutral-500" size={20} />
               Equipo Rival
@@ -433,6 +485,21 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
             <span className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 px-2.5 py-1 rounded-lg text-sm font-bold">
               {rivalPlayers.length} Jugadores
             </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Sistema Ataque Rival</label>
+              <select name="sistema_ataque_rival" value={formData.sistema_ataque_rival} onChange={handleInputChange} className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all text-sm font-medium">
+                {SISTEMAS.map(sys => <option key={sys} value={sys}>{sys}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Sistema Defensa Rival</label>
+              <select name="sistema_defensa_rival" value={formData.sistema_defensa_rival} onChange={handleInputChange} className="w-full px-3 py-2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all text-sm font-medium">
+                {SISTEMAS.map(sys => <option key={sys} value={sys}>{sys}</option>)}
+              </select>
+            </div>
           </div>
 
           <div className="space-y-4 flex-1">
