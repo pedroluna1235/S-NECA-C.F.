@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Save, Loader2, Clock, MapPin, Users, Info, AlertTriangle, RefreshCw, Star, Cloud, ShieldAlert } from 'lucide-react';
-import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
