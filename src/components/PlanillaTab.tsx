@@ -8,7 +8,71 @@ interface PlanillaTabProps {
   matchId: string;
 }
 
-const SISTEMAS = ['1-2-3-1', '1-3-2-1', '1-3-1-2', '1-2-2-2'];
+type Sistema = '1-2-3-1' | '1-3-2-1' | '1-3-1-2' | '1-2-2-2';
+
+interface PositionDef {
+  id: string;
+  label: string;
+  top: number;
+  left: number;
+}
+
+const SISTEMAS_DEF: Record<Sistema, PositionDef[]> = {
+  '1-2-3-1': [
+    { id: 'POR', label: 'POR', top: 90, left: 50 },
+    { id: 'DFD', label: 'DFD', top: 75, left: 80 },
+    { id: 'DFI', label: 'DFI', top: 75, left: 20 },
+    { id: 'MCD', label: 'MCD', top: 55, left: 50 },
+    { id: 'MD',  label: 'MD',  top: 40, left: 85 },
+    { id: 'MI',  label: 'MI',  top: 40, left: 15 },
+    { id: 'DC',  label: 'DC',  top: 15, left: 50 },
+  ],
+  '1-3-2-1': [
+    { id: 'POR', label: 'POR', top: 90, left: 50 },
+    { id: 'DFD', label: 'DFD', top: 75, left: 85 },
+    { id: 'DFC', label: 'DFC', top: 75, left: 50 },
+    { id: 'DFI', label: 'DFI', top: 75, left: 15 },
+    { id: 'MC1', label: 'MC',  top: 45, left: 65 },
+    { id: 'MC2', label: 'MC',  top: 45, left: 35 },
+    { id: 'DC',  label: 'DC',  top: 15, left: 50 },
+  ],
+  '1-3-1-2': [
+    { id: 'POR', label: 'POR', top: 90, left: 50 },
+    { id: 'DFD', label: 'DFD', top: 75, left: 85 },
+    { id: 'DFC', label: 'DFC', top: 75, left: 50 },
+    { id: 'DFI', label: 'DFI', top: 75, left: 15 },
+    { id: 'MC',  label: 'MC',  top: 50, left: 50 },
+    { id: 'DC1', label: 'DC',  top: 15, left: 65 },
+    { id: 'DC2', label: 'DC',  top: 15, left: 35 },
+  ],
+  '1-2-2-2': [
+    { id: 'POR', label: 'POR', top: 90, left: 50 },
+    { id: 'DFD', label: 'DFD', top: 75, left: 75 },
+    { id: 'DFI', label: 'DFI', top: 75, left: 25 },
+    { id: 'MD',  label: 'MD',  top: 45, left: 75 },
+    { id: 'MI',  label: 'MI',  top: 45, left: 25 },
+    { id: 'DC1', label: 'DC',  top: 15, left: 65 },
+    { id: 'DC2', label: 'DC',  top: 15, left: 35 },
+  ],
+};
+
+const SISTEMAS = Object.keys(SISTEMAS_DEF) as Sistema[];
+
+const ALL_POSITIONS = [
+  { id: 'POR', label: 'Portero' },
+  { id: 'DFD', label: 'Lateral Derecho' },
+  { id: 'DFC', label: 'Central' },
+  { id: 'DFI', label: 'Lateral Izquierdo' },
+  { id: 'MCD', label: 'Pivote' },
+  { id: 'MC', label: 'Mediocentro' },
+  { id: 'MC1', label: 'Interior/Medio 1' },
+  { id: 'MC2', label: 'Interior/Medio 2' },
+  { id: 'MD', label: 'Medio Derecho' },
+  { id: 'MI', label: 'Medio Izquierdo' },
+  { id: 'DC', label: 'Delantero' },
+  { id: 'DC1', label: 'Delantero 1' },
+  { id: 'DC2', label: 'Delantero 2' },
+];
 
 interface JugadorPlanilla {
   id: string;
@@ -49,6 +113,8 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
   const [localPlayers, setLocalPlayers] = useState<JugadorPlanilla[]>([]);
   const [rivalPlayers, setRivalPlayers] = useState<JugadorPlanilla[]>([]);
   const [eventos, setEventos] = useState<EventoPlanilla[]>([]);
+  const [pitchViewRival, setPitchViewRival] = useState<'ataque' | 'defensa'>('defensa');
+  const [selectedRivalId, setSelectedRivalId] = useState<string | null>(null);
 
   // Add rival form
   const [newRival, setNewRival] = useState({ nombre: '', dorsal: '', titular: false, posicion: '' });
@@ -310,20 +376,17 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
 
         {!isLocal && (
           <div className="flex flex-col gap-1.5 mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-800">
-            <input 
-              type="text" 
-              placeholder="Posición (ej. Lateral, DFD, POR...)" 
+            <select 
               value={jugador.posicion || ''} 
               onChange={e => updateRivalField(jugador.id, 'posicion', e.target.value)} 
               className="w-full text-xs px-2 py-1.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md outline-none focus:border-neutral-400"
-            />
-            <textarea 
-              placeholder="Anotaciones sobre este jugador..." 
-              value={jugador.notas || ''} 
-              onChange={e => updateRivalField(jugador.id, 'notas', e.target.value)} 
-              rows={2}
-              className="w-full text-xs px-2 py-1.5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md outline-none focus:border-neutral-400 resize-none"
-            />
+            >
+              <option value="">Seleccionar posición...</option>
+              {ALL_POSITIONS.map(pos => (
+                <option key={pos.id} value={pos.id}>{pos.id} - {pos.label}</option>
+              ))}
+            </select>
+            {/* Textarea moved to pitch modal */}
           </div>
         )}
 
@@ -502,6 +565,47 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
             </div>
           </div>
 
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Disposición Táctica</label>
+              <div className="flex bg-neutral-100 dark:bg-neutral-800 rounded-lg p-0.5">
+                <button onClick={() => setPitchViewRival('ataque')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${pitchViewRival === 'ataque' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500'}`}>Ataque</button>
+                <button onClick={() => setPitchViewRival('defensa')} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors ${pitchViewRival === 'defensa' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-500'}`}>Defensa</button>
+              </div>
+            </div>
+            
+            <div className="relative w-full max-w-[280px] mx-auto aspect-[2/3] bg-green-600 rounded-lg overflow-hidden border-4 border-green-700 shadow-inner flex-shrink-0"
+                 style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(255,255,255,0.05) 50px, rgba(255,255,255,0.05) 100px)` }}>
+              
+              <div className="absolute inset-4 border-2 border-white/50 rounded" />
+              <div className="absolute top-1/2 left-4 right-4 h-0 border-t-2 border-white/50" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border-2 border-white/50 rounded-full" />
+              
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-2 border-white/50 border-b-0" />
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 w-1/2 h-1/6 border-2 border-white/50 border-t-0" />
+
+              {SISTEMAS_DEF[pitchViewRival === 'ataque' ? (formData.sistema_ataque_rival as Sistema) : (formData.sistema_defensa_rival as Sistema)]?.map(pos => {
+                const player = rivalPlayers.find(p => p.titular && p.posicion === pos.id);
+                return (
+                  <div 
+                    key={pos.id} 
+                    className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer hover:scale-110 transition-transform group"
+                    style={{ top: `${pos.top}%`, left: `${pos.left}%` }}
+                    onClick={() => player ? setSelectedRivalId(player.id) : null}
+                  >
+                    <div className={`w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-white font-bold shadow-md text-xs ${player ? 'bg-neutral-800' : 'bg-neutral-800/50'}`}>
+                      {player ? (player.dorsal || '-') : '?'}
+                    </div>
+                    <span className="text-[9px] font-bold text-white bg-black/60 px-1 rounded mt-0.5 truncate max-w-[50px]">
+                      {player ? player.nombre.split(' ')[0] : pos.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-neutral-400 text-center mt-2">Haz clic en un jugador del campo para desarrollar sus anotaciones.</p>
+          </div>
+
           <div className="space-y-4 flex-1">
             {/* Formulario Añadir Rival */}
             <div className="flex gap-2 items-center p-3 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl">
@@ -569,6 +673,58 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
           />
         </div>
       </div>
+
+      {/* RIVAL PLAYER NOTES MODAL */}
+      {selectedRivalId && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-neutral-900 w-full max-w-md rounded-3xl p-6 shadow-2xl relative border border-neutral-200 dark:border-neutral-800">
+            <button 
+              onClick={() => setSelectedRivalId(null)}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-900 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800 p-1.5 rounded-full transition-colors"
+            >
+              <span className="flex items-center justify-center w-5 h-5 font-bold text-lg">×</span>
+            </button>
+            
+            {(() => {
+              const player = rivalPlayers.find(p => p.id === selectedRivalId);
+              if (!player) return null;
+              
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center font-black text-neutral-900 dark:text-white border-2 border-neutral-200 dark:border-neutral-700">
+                      {player.dorsal || '-'}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-neutral-900 dark:text-white leading-tight">{player.nombre}</h3>
+                      <p className="text-sm font-bold text-red-500">{ALL_POSITIONS.find(p => p.id === player.posicion)?.label || player.posicion || 'Sin Posición'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Desarrollo y Anotaciones</label>
+                    <textarea 
+                      placeholder="Escribe aquí las observaciones sobre este jugador (perfil, puntos débiles, características...)"
+                      value={player.notas || ''}
+                      onChange={e => updateRivalField(player.id, 'notas', e.target.value)}
+                      rows={6}
+                      className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-medium resize-none"
+                      autoFocus
+                    />
+                  </div>
+
+                  <button 
+                    onClick={() => setSelectedRivalId(null)}
+                    className="w-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold py-3 rounded-xl hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors"
+                  >
+                    Guardar y Cerrar
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
 
     </div>
   );
