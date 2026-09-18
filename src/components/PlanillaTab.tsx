@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Loader2, Clock, MapPin, Users, Info, Plus, Trash2, ShieldAlert, Cloud, Star, AlertTriangle, Activity } from 'lucide-react';
+import { Save, Loader2, Clock, MapPin, Users, Info, Plus, Trash2, ShieldAlert, Cloud, Star, AlertTriangle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -70,7 +70,7 @@ export function PlanillaTab({ matchId }: PlanillaTabProps) {
         const { data: jugData } = await supabase
           .from('jugadores')
           .select('id, nombre, dorsal')
-          .in('id', convRes.data.jugadores_ids);
+          .in('id', convRes.data!.jugadores_ids);
 
         if (jugData) {
           fetchedLocalPlayers = jugData.map(j => ({
