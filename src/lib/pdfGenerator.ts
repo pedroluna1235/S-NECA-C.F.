@@ -30,21 +30,7 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
   element.style.overflow = 'visible';
 
   try {
-    const canvas = await html2canvas(element, {
-      scale: 2, // Mayor calidad
-      useCORS: true, // Permitir imágenes de otros dominios
-      logging: true,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
-      width: element.scrollWidth,
-      height: element.scrollHeight,
-      scrollY: 0,
-      scrollX: 0
-    });
-
-    const imgData = canvas.toDataURL('image/jpeg', 1.0);
-    
-    // Calcular tamaño para A4
+    const pageElements = Array.from(element.querySelectorAll<HTMLElement>('.pdf-page'));
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -52,20 +38,66 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
     });
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-    
-    let heightLeft = imgHeight;
-    let position = 0;
+    const pdfHeight = pdf.internal.pageSize.getHeight();
 
-    pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-    heightLeft -= pageHeight;
+    if (pageElements.length > 0) {
+      // Modo paginado: renderiza cada página de forma independiente evitando cortes
+      for (let i = 0; i < pageElements.length; i++) {
+        if (i > 0) {
+          pdf.addPage();
+        }
 
-    while (heightLeft > 0) {
-      position = position - pageHeight;
-      pdf.addPage();
+        // Asegurar que solo la página actual está visible durante la captura para evitar bugs de scroll/offset
+        pageElements.forEach((p, idx) => {
+          p.style.display = idx === i ? 'flex' : 'none';
+        });
+
+        const pageEl = pageElements[i];
+        const canvas = await html2canvas(pageEl, {
+          scale: 2, // Mayor calidad
+          useCORS: true, // Permitir imágenes de otros dominios
+          logging: false,
+          backgroundColor: '#ffffff',
+          windowWidth: 800,
+          windowHeight: 1131,
+          width: 800,
+          height: 1131,
+          scrollY: 0,
+          scrollX: 0
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      }
+    } else {
+      // Fallback para elementos sin páginas explícitas
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        scrollY: 0,
+        scrollX: 0
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
       pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-      heightLeft -= pageHeight;
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = position - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
     }
 
     // Obtener blob
@@ -92,7 +124,13 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
 
     return publicUrl;
   } finally {
-    // Restaurar display
+    // Restaurar display en páginas
+    const pageElements = element.querySelectorAll<HTMLElement>('.pdf-page');
+    pageElements.forEach(p => {
+      p.style.display = 'flex';
+    });
+
+    // Restaurar display original
     Object.assign(element.style, originalStyles);
     if (parent) {
       if (nextSibling) {
