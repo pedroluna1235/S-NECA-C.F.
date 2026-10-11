@@ -299,9 +299,9 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
                       <div key={sesionInd.id} className="text-[10px]">
                         <div className="font-bold leading-tight">{sesionInd.nombres.toUpperCase()}</div>
                         <div className="flex flex-wrap gap-1 mt-0.5">
-                          {sesionInd.video && <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', borderColor: '#BFDBFE' }} className="px-1 py-0.2 rounded text-[8px] font-semibold border">VÍDEO</span>}
-                          {sesionInd.entrenamiento && <span style={{ backgroundColor: '#DCFCE7', color: '#166534', borderColor: '#BBF7D0' }} className="px-1 py-0.2 rounded text-[8px] font-semibold border">ENTRENO</span>}
-                          {sesionInd.charla && <span style={{ backgroundColor: '#F3E8FF', color: '#6B21A8', borderColor: '#E9D5FF' }} className="px-1 py-0.2 rounded text-[8px] font-semibold border">CHARLA</span>}
+                          {sesionInd.video && <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', borderColor: '#BFDBFE', borderWidth: '1px', borderStyle: 'solid' }} className="px-1 py-0.2 rounded text-[8px] font-semibold">VÍDEO</span>}
+                          {sesionInd.entrenamiento && <span style={{ backgroundColor: '#DCFCE7', color: '#166534', borderColor: '#BBF7D0', borderWidth: '1px', borderStyle: 'solid' }} className="px-1 py-0.2 rounded text-[8px] font-semibold">ENTRENO</span>}
+                          {sesionInd.charla && <span style={{ backgroundColor: '#F3E8FF', color: '#6B21A8', borderColor: '#E9D5FF', borderWidth: '1px', borderStyle: 'solid' }} className="px-1 py-0.2 rounded text-[8px] font-semibold">CHARLA</span>}
                         </div>
                       </div>
                     ))}
@@ -319,18 +319,18 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
             <div className="flex justify-between items-center border mb-2.5 p-1.5 text-xs" style={styles.borderBlack}>
               <div className="flex items-center gap-2">
                 <img src="/logo.png" alt="SÉNECA C.F." className="w-7 h-7 object-contain" />
-                <span className="font-bold text-xs">SÉNECA C.F.</span>
-                <span className="text-gray-400">|</span>
-                <span className="font-semibold text-xs">SESIÓN {datos.cabecera.sesionNum}</span>
+                <span className="font-bold text-xs" style={{ color: '#000000' }}>SÉNECA C.F.</span>
+                <span style={{ color: '#9ca3af' }}>|</span>
+                <span className="font-semibold text-xs" style={{ color: '#000000' }}>SESIÓN {datos.cabecera.sesionNum}</span>
                 {datos.cabecera.objetivo && (
                   <>
-                    <span className="text-gray-400">-</span>
-                    <span className="font-medium text-[11px] text-gray-700">{datos.cabecera.objetivo}</span>
+                    <span style={{ color: '#9ca3af' }}>-</span>
+                    <span className="font-medium text-[11px]" style={{ color: '#374151' }}>{datos.cabecera.objetivo}</span>
                   </>
                 )}
               </div>
-              <div className="flex items-center gap-2.5 font-medium text-[10px] text-gray-600">
-                <span>Microciclo: <strong className="text-black">{datos.cabecera.microcicloNum}</strong></span>
+              <div className="flex items-center gap-2.5 font-medium text-[10px]" style={{ color: '#4b5563' }}>
+                <span>Microciclo: <strong style={{ color: '#000000' }}>{datos.cabecera.microcicloNum}</strong></span>
                 <span>{datos.cabecera.fecha} {datos.cabecera.hora}</span>
               </div>
             </div>

@@ -2,6 +2,59 @@ import { supabase } from './supabase';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
+function sanitizeOklchColors(clonedDoc: Document) {
+  const canvas = clonedDoc.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const ctx = canvas.getContext('2d');
+
+  const convertColor = (val: string, fallback: string = '#000000'): string => {
+    if (!val || !val.includes('oklch')) return val;
+    if (ctx) {
+      try {
+        ctx.fillStyle = '#000000';
+        ctx.fillStyle = val;
+        return ctx.fillStyle;
+      } catch {
+        // ignore
+      }
+    }
+    return fallback;
+  };
+
+  const allElements = clonedDoc.querySelectorAll('*');
+  const win = clonedDoc.defaultView || window;
+  const colorProps = [
+    'color',
+    'background-color',
+    'border-top-color',
+    'border-right-color',
+    'border-bottom-color',
+    'border-left-color',
+    'outline-color',
+    'text-decoration-color'
+  ];
+
+  allElements.forEach((el) => {
+    const htmlEl = el as HTMLElement;
+    try {
+      const computed = win.getComputedStyle(htmlEl);
+      if (computed) {
+        colorProps.forEach((prop) => {
+          const val = computed.getPropertyValue(prop);
+          if (val && val.includes('oklch')) {
+            const fallback = prop.includes('background') ? '#ffffff' : '#000000';
+            const converted = convertColor(val, fallback);
+            htmlEl.style.setProperty(prop, converted, 'important');
+          }
+        });
+      }
+    } catch {
+      // ignore
+    }
+  });
+}
+
 export async function generateAndUploadPDF(elementId: string, filename: string): Promise<string> {
   const element = document.getElementById(elementId);
   if (!element) {
@@ -63,7 +116,8 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
           width: 800,
           height: 1131,
           scrollY: 0,
-          scrollX: 0
+          scrollX: 0,
+          onclone: (clonedDoc) => sanitizeOklchColors(clonedDoc)
         });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.98);
@@ -80,7 +134,8 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
         width: element.scrollWidth,
         height: element.scrollHeight,
         scrollY: 0,
-        scrollX: 0
+        scrollX: 0,
+        onclone: (clonedDoc) => sanitizeOklchColors(clonedDoc)
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
