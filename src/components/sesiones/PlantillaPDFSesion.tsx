@@ -44,81 +44,83 @@ interface TareaCardProps {
 
 const TareaCard: React.FC<TareaCardProps> = ({ tarea, isFullWidth = false }) => {
   return (
-    <div className="border text-xs flex" style={styles.borderBlack}>
+    <div className="flex-1 border text-xs flex min-h-0" style={styles.borderBlack}>
       {/* TIEMPO */}
       <div 
-        className="w-10 border-r flex flex-col items-center justify-center p-1 font-bold text-xs" 
+        className="w-10 border-r flex flex-col items-center justify-center p-1.5 font-bold text-sm" 
         style={{ ...styles.borderBlack, ...styles.bgWhite }}
       >
-        {tarea.tiempo}'
+        <span>{tarea.tiempo}'</span>
       </div>
 
       {/* CONTENIDO */}
-      <div className="flex-1 p-2 flex flex-col justify-start" style={styles.bgWhite}>
-        <div className="font-bold mb-1 uppercase text-xs leading-tight tracking-wide" style={{ color: '#111827' }}>
+      <div className="flex-1 p-3 flex flex-col justify-start overflow-hidden" style={styles.bgWhite}>
+        <div className="font-bold mb-1.5 uppercase text-xs leading-tight tracking-wide" style={{ color: '#111827' }}>
           {tarea.titulo}
         </div>
         
         {tarea.descripcion && (
-          <div className="whitespace-pre-wrap text-[11px] leading-tight" style={{ color: '#1f2937' }}>
+          <div className="whitespace-pre-wrap text-[11px] leading-snug" style={{ color: '#1f2937' }}>
             {tarea.descripcion}
           </div>
         )}
 
-        {tarea.equipos && (
-          <div className="mt-1.5 text-[10px] leading-tight">
-            <span className="font-bold">Equipos:</span> <span style={{ color: '#111827' }}>{tarea.equipos}</span>
-          </div>
-        )}
+        <div className="mt-auto pt-2 flex flex-col gap-1 text-[10px] leading-tight">
+          {tarea.equipos && (
+            <div>
+              <span className="font-bold" style={{ color: '#000000' }}>Equipos:</span> <span style={{ color: '#111827' }}>{tarea.equipos}</span>
+            </div>
+          )}
 
-        {tarea.variables && (
-          <div className="mt-1.5 text-[10px] leading-tight" style={styles.textGray700}>
-            <span className="font-bold italic">Variables:</span> <span className="italic">{tarea.variables}</span>
-          </div>
-        )}
+          {tarea.variables && (
+            <div style={styles.textGray700}>
+              <span className="font-bold italic">Variables:</span> <span className="italic">{tarea.variables}</span>
+            </div>
+          )}
 
-        {tarea.responsabilidades && (
-          <div className="mt-1.5 text-[10px] leading-tight" style={styles.textGray700}>
-            <span className="font-bold italic">Responsabilidades:</span> <span className="italic">{tarea.responsabilidades}</span>
-          </div>
-        )}
+          {tarea.responsabilidades && (
+            <div style={styles.textGray700}>
+              <span className="font-bold italic">Responsabilidades:</span> <span className="italic">{tarea.responsabilidades}</span>
+            </div>
+          )}
 
-        {tarea.roles && (
-          <div className="mt-1.5 text-[10px] leading-tight" style={styles.textGray700}>
-            <span className="font-bold">Roles CT:</span> <span>{tarea.roles}</span>
-          </div>
-        )}
+          {tarea.roles && (
+            <div style={styles.textGray700}>
+              <span className="font-bold">Roles CT:</span> <span>{tarea.roles}</span>
+            </div>
+          )}
 
-        {tarea.reflexion && (
-          <div className="mt-1.5 text-[10px] leading-tight">
-            <span className="font-bold">Reflexión:</span> <span className="font-medium">{tarea.reflexion}</span>
-          </div>
-        )}
+          {tarea.reflexion && (
+            <div>
+              <span className="font-bold" style={{ color: '#000000' }}>Reflexión:</span> <span className="font-medium" style={{ color: '#111827' }}>{tarea.reflexion}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* CAMPO / IMAGEN Y OBJETIVO INDIVIDUAL */}
       <div 
-        className={`${isFullWidth ? 'w-60' : 'w-48'} border-l p-1.5 flex flex-col items-center justify-between gap-1`} 
+        className={`${isFullWidth ? 'w-64' : 'w-56'} border-l p-2 flex flex-col items-center justify-between gap-1.5 flex-shrink-0`} 
         style={{ ...styles.borderBlack, ...styles.bgGreen }}
       >
-        <div className="flex-1 flex items-center justify-center w-full">
+        <div className="flex-1 flex items-center justify-center w-full min-h-0">
           {tarea.imagen_url ? (
             <img 
               src={tarea.imagen_url} 
               alt="Tarea" 
-              className={`max-w-full ${isFullWidth ? 'max-h-32' : 'max-h-28'} object-contain`} 
+              className={`max-w-full ${isFullWidth ? 'max-h-52' : 'max-h-48'} object-contain`} 
             />
           ) : (
-            <span className="text-[10px]" style={styles.textGray400}>Sin imagen</span>
+            <span className="text-[11px]" style={styles.textGray400}>Sin imagen</span>
           )}
         </div>
         
         {tarea.objetivo_individual && (
           <div 
-            className="w-full p-1 border text-[9px] text-center leading-tight" 
+            className="w-full p-1.5 border text-[9px] text-center leading-tight flex-shrink-0" 
             style={{ ...styles.borderBlack, ...styles.bgWhite }}
           >
-            <span className="font-bold block mb-0.5 text-[8px] uppercase tracking-wider">OBJETIVO INDIVIDUAL</span>
+            <span className="font-bold block mb-0.5 text-[8px] uppercase tracking-wider" style={{ color: '#000000' }}>OBJETIVO INDIVIDUAL</span>
             <span className="font-medium" style={{ color: '#1f2937' }}>{tarea.objetivo_individual}</span>
           </div>
         )}
@@ -238,16 +240,16 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
           </div>
 
           {/* CUERPO PRINCIPAL PÁGINA 1: TAREAS + JUGADORES */}
-          <div className="flex gap-3 flex-1 items-start">
+          <div className="flex gap-3 flex-1 min-h-0">
             {/* TAREAS PÁGINA 1 */}
-            <div className="flex-1 flex flex-col gap-2.5">
+            <div className="flex-1 flex flex-col gap-3 min-h-0">
               {page1Tareas.map((tarea, index) => (
                 <TareaCard key={index} tarea={tarea} isFullWidth={false} />
               ))}
               
               {/* KPIS (si caben en página 1) */}
               {kpisOnPage1 && datos.kpis && (
-                <div className="border text-xs flex flex-col" style={styles.borderBlack}>
+                <div className="border text-xs flex flex-col flex-shrink-0" style={styles.borderBlack}>
                   <div className="border-b py-0.5 px-2 font-bold text-center text-[10px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>
                     KPIS
                   </div>
@@ -336,7 +338,7 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
             </div>
 
             {/* TAREAS PÁGINA ADICIONAL (A ANCHO COMPLETO) */}
-            <div className="flex flex-col gap-2.5 flex-1">
+            <div className="flex flex-col gap-3 flex-1 min-h-0">
               {page.tareas.map((tarea, tIdx) => (
                 <TareaCard key={tIdx} tarea={tarea} isFullWidth={true} />
               ))}
