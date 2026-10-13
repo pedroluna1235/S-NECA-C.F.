@@ -632,6 +632,7 @@ export function DiseñadorTarea({
               <option value="ABP">ABP</option>
               <option value="Finalizaciones">Finalizaciones</option>
               <option value="Partidos Modificados">Partidos Modificados</option>
+              <option value="Trabajo individual">Trabajo individual</option>
             </select>
             <select 
                 value={fieldType} 

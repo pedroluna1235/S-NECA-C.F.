@@ -30,7 +30,8 @@ export function Tareas() {
     'Minipartidos',
     'ABP',
     'Finalizaciones',
-    'Partidos Modificados'
+    'Partidos Modificados',
+    'Trabajo individual'
   ];
 
   const tareasFiltradas = tareas.filter(tarea => {
