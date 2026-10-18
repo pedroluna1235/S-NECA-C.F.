@@ -92,12 +92,14 @@ export function HistorialAsistencia({ sesiones }: HistorialAsistenciaProps) {
               : 0;
 
             return (
-              <tr key={jugador.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 transition-colors">
-                <td className="sticky left-0 z-10 bg-white dark:bg-neutral-950 px-6 py-3 font-medium text-neutral-900 dark:text-white border-r border-neutral-200 dark:border-neutral-800 flex items-center gap-3 shadow-[1px_0_0_0_#e5e5e5] dark:shadow-[1px_0_0_0_#262626] group-hover:bg-neutral-50 dark:group-hover:bg-neutral-900">
-                  <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-600 dark:text-neutral-400">
-                    {jugador.dorsal || '-'}
+              <tr key={jugador.id} className="group hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 transition-colors">
+                <td className="sticky left-0 z-10 bg-white dark:bg-neutral-950 px-6 py-3 font-medium text-neutral-900 dark:text-white border-r border-neutral-200 dark:border-neutral-800 shadow-[1px_0_0_0_#e5e5e5] dark:shadow-[1px_0_0_0_#262626] group-hover:bg-neutral-50 dark:group-hover:bg-neutral-900 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 shrink-0 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-xs font-bold text-neutral-600 dark:text-neutral-400">
+                      {jugador.dorsal || '-'}
+                    </div>
+                    <span>{jugador.nombre}</span>
                   </div>
-                  {jugador.nombre}
                 </td>
                 
                 {sesionesOrdenadas.map((sesion) => {
