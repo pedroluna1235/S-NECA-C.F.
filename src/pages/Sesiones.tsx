@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Calendar, List, BookOpen, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Match } from '../components/MatchCard';
@@ -20,11 +21,43 @@ export type Sesion = {
 };
 
 export function Sesiones() {
-  const [activeTab, setActiveTab] = useState<'calendario' | 'historial' | 'asistencia' | 'disenar'>('calendario');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentTab = searchParams.get('tab') as 'calendario' | 'historial' | 'asistencia' | 'disenar' | null;
+  const activeTab = currentTab && ['calendario', 'historial', 'asistencia', 'disenar'].includes(currentTab)
+    ? currentTab
+    : 'calendario';
+
+  const setActiveTab = (tab: 'calendario' | 'historial' | 'asistencia' | 'disenar') => {
+    setSearchParams({ tab });
+  };
+
   const [sesiones, setSesiones] = useState<Sesion[]>([]);
   const [partidos, setPartidos] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [sesionToEdit, setSesionToEdit] = useState<Sesion | null>(null);
+  const [hasDraft, setHasDraft] = useState(false);
+
+  useEffect(() => {
+    const checkDraft = () => {
+      try {
+        const raw = localStorage.getItem('seneca_sesion_diseno_draft');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const d = parsed?.datos;
+          if (d && (d.cabecera?.objetivo || d.cabecera?.principios || d.tareas?.length > 0 || d.kpis)) {
+            setHasDraft(true);
+            return;
+          }
+        }
+        setHasDraft(false);
+      } catch {
+        setHasDraft(false);
+      }
+    };
+    checkDraft();
+    window.addEventListener('storage', checkDraft);
+    return () => window.removeEventListener('storage', checkDraft);
+  }, [activeTab]);
 
   const handleEditDesign = (sesion: Sesion) => {
     setSesionToEdit(sesion);
@@ -106,14 +139,19 @@ export function Sesiones() {
         </button>
         <button
           onClick={() => setActiveTab('disenar')}
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all duration-200 relative ${
             activeTab === 'disenar'
               ? 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-500 shadow-sm'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800'
           }`}
         >
           <BookOpen size={20} />
-          Diseñar Sesión
+          <span>Diseñar Sesión</span>
+          {hasDraft && activeTab !== 'disenar' && (
+            <span className="flex items-center gap-1 text-[11px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full animate-pulse border border-amber-300 dark:border-amber-700">
+              Borrador
+            </span>
+          )}
         </button>
       </div>
 

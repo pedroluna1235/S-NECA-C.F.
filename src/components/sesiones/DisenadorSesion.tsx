@@ -1,11 +1,57 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Plus, Trash2, Save, ImageIcon, Calendar, Users } from 'lucide-react';
+import { Loader2, Plus, Trash2, Save, ImageIcon, Calendar, Users, RotateCcw, CheckCircle2, Bookmark } from 'lucide-react';
 import type { DatosDisenoSesion, TareaSesion } from '../../types/sesion';
 import { PlantillaPDFSesion } from './PlantillaPDFSesion';
 import { generateAndUploadPDF } from '../../lib/pdfGenerator';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+
+const DRAFT_STORAGE_KEY = 'seneca_sesion_diseno_draft';
+
+export interface SesionDraftData {
+  datos: DatosDisenoSesion;
+  sesionIdToEdit?: string | null;
+  timestamp: number;
+  savedAt: string;
+}
+
+const isDraftMeaningful = (d?: DatosDisenoSesion | null) => {
+  if (!d) return false;
+  const hasObjetivo = Boolean(d.cabecera?.objetivo && d.cabecera.objetivo.trim().length > 0);
+  const hasPrincipios = Boolean(d.cabecera?.principios && d.cabecera.principios.trim().length > 0);
+  const hasTareas = Boolean(d.tareas && d.tareas.length > 0);
+  const hasIndividuales = Boolean(d.sesionesIndividuales && d.sesionesIndividuales.length > 0);
+  const hasKpis = Boolean(d.kpis && d.kpis.trim().length > 0);
+  const hasMaterial = Boolean(d.material && Object.values(d.material).some(v => typeof v === 'number' && v > 0));
+  return hasObjetivo || hasPrincipios || hasTareas || hasIndividuales || hasKpis || hasMaterial;
+};
+
+function saveDraftToStorage(draftData: SesionDraftData): boolean {
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftData));
+    return true;
+  } catch (err) {
+    try {
+      // Si excede la cuota de localStorage por imágenes base64 grandes, guardamos texto y configuración
+      const safeDraft: SesionDraftData = {
+        ...draftData,
+        datos: {
+          ...draftData.datos,
+          tareas: (draftData.datos.tareas || []).map(t => ({
+            ...t,
+            imagen_url: t.imagen_url && t.imagen_url.startsWith('data:') && t.imagen_url.length > 30000 ? '' : t.imagen_url
+          }))
+        }
+      };
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(safeDraft));
+      return true;
+    } catch (innerErr) {
+      console.error('Error al guardar borrador en localStorage:', innerErr);
+      return false;
+    }
+  }
+}
 
 interface DisenadorSesionProps {
   onSesionGuardada: () => void;
@@ -17,6 +63,13 @@ export function DisenadorSesion({ onSesionGuardada, initialDatos, sesionIdToEdit
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [nuevoJugadorNombre, setNuevoJugadorNombre] = useState('');
+
+  // Estados para el sistema de recuperación y autoguardado de borrador
+  const [availableDraft, setAvailableDraft] = useState<SesionDraftData | null>(null);
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
+  const [lastSavedText, setLastSavedText] = useState<string>('');
+  const [isDirty, setIsDirty] = useState(false);
+  const isInitialMount = useRef(true);
 
   const addJugadorManual = () => {
     if (!nuevoJugadorNombre.trim()) return;
@@ -104,6 +157,154 @@ export function DisenadorSesion({ onSesionGuardada, initialDatos, sesionIdToEdit
     };
     fetchJugadores();
   }, [initialDatos]);
+
+  // Comprobar si hay un borrador guardado en localStorage al montar
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (raw) {
+        const parsed: SesionDraftData = JSON.parse(raw);
+        if (parsed?.datos && isDraftMeaningful(parsed.datos)) {
+          // Si estamos editando una sesión guardada, comprobar que coincida la sesión o que sea nuevo diseño
+          if (!sesionIdToEdit || parsed.sesionIdToEdit === sesionIdToEdit) {
+            setAvailableDraft(parsed);
+            setShowDraftBanner(true);
+            setLastSavedText(`Borrador guardado (${parsed.savedAt})`);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error al leer borrador de localStorage:', e);
+    }
+  }, [sesionIdToEdit]);
+
+  // Autoguardado continuo (debounced 800ms)
+  useEffect(() => {
+    if (loading) return;
+
+    // En el primer render no sobreescribir borrador existente con el formulario vacío inicial
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (!isDraftMeaningful(datos)) return;
+
+    const timer = setTimeout(() => {
+      const now = new Date();
+      const timeFormatted = format(now, 'HH:mm:ss');
+      const dateFormatted = format(now, 'dd/MM/yyyy');
+      const draftData: SesionDraftData = {
+        datos,
+        sesionIdToEdit: sesionIdToEdit || null,
+        timestamp: Date.now(),
+        savedAt: `${dateFormatted} a las ${timeFormatted}`
+      };
+
+      const success = saveDraftToStorage(draftData);
+      if (success) {
+        setLastSavedText(`Guardado a las ${timeFormatted}`);
+        setIsDirty(true);
+        setAvailableDraft(draftData);
+      }
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [datos, loading, sesionIdToEdit]);
+
+  // Alerta de navegación accidental (atrás, cerrar pestaña, refrescar)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty && isDraftMeaningful(datos)) {
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios en el diseño de la sesión. Tu trabajo está guardado automáticamente en el borrador de tu navegador.';
+        return e.returnValue;
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isDirty, datos]);
+
+  const handleRestoreDraft = () => {
+    if (!availableDraft) {
+      toast.error('No se ha encontrado ningún borrador para recuperar');
+      return;
+    }
+    setDatos(availableDraft.datos);
+    setShowDraftBanner(false);
+    setIsDirty(false);
+    toast.success('¡Sesión recuperada con éxito!', {
+      icon: '📋',
+      duration: 3500
+    });
+  };
+
+  const handleDiscardDraft = () => {
+    if (window.confirm('¿Seguro que deseas descartar el borrador guardado? Esta acción no se puede deshacer.')) {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      setAvailableDraft(null);
+      setShowDraftBanner(false);
+      setLastSavedText('');
+      toast('Borrador descartado', { icon: '🗑️' });
+    }
+  };
+
+  const handleManualSaveDraft = () => {
+    const now = new Date();
+    const timeFormatted = format(now, 'HH:mm:ss');
+    const dateFormatted = format(now, 'dd/MM/yyyy');
+    const draftData: SesionDraftData = {
+      datos,
+      sesionIdToEdit: sesionIdToEdit || null,
+      timestamp: Date.now(),
+      savedAt: `${dateFormatted} a las ${timeFormatted}`
+    };
+
+    saveDraftToStorage(draftData);
+    setLastSavedText(`Guardado manual a las ${timeFormatted}`);
+    setAvailableDraft(draftData);
+    setIsDirty(false);
+    toast.success('Borrador guardado en tu navegador', { icon: '💾' });
+  };
+
+  const handleResetForm = () => {
+    if (window.confirm('¿Deseas reiniciar el diseño de la sesión y empezar de cero?')) {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      setAvailableDraft(null);
+      setShowDraftBanner(false);
+      setDatos({
+        cabecera: {
+          objetivo: '',
+          principios: '',
+          microcicloNum: '1',
+          fecha: format(new Date(), 'yyyy-MM-dd'),
+          hora: '16:00',
+          sesionNum: '1'
+        },
+        material: {
+          balones: 0,
+          petos1: 0,
+          petos2: 0,
+          petos3: 0,
+          conos: 0,
+          aros: 0,
+          bancos: 0,
+          fitball: 0,
+          picas: 0,
+          porterias: 0
+        },
+        tareas: [],
+        jugadores: datos.jugadores.map(j => ({ ...j, disponible: !isHiddenPlayer(j.nombre) })),
+        sesionesIndividuales: [],
+        kpis: ''
+      });
+      setLastSavedText('');
+      setIsDirty(false);
+      toast('Diseñador reiniciado', { icon: '🔄' });
+    }
+  };
 
   const addTarea = () => {
     const nuevaTarea: TareaSesion = {
@@ -237,6 +438,11 @@ export function DisenadorSesion({ onSesionGuardada, initialDatos, sesionIdToEdit
       }
 
       toast.success('Sesión guardada correctamente', { id: loadingToast });
+      // Limpiar borrador tras guardado exitoso
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      setAvailableDraft(null);
+      setShowDraftBanner(false);
+      setIsDirty(false);
       onSesionGuardada();
     } catch (error: any) {
       console.error('Error al guardar sesión:', error);
@@ -251,11 +457,102 @@ export function DisenadorSesion({ onSesionGuardada, initialDatos, sesionIdToEdit
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-24">
       
+      {/* BANNER DE RECUPERACIÓN DE BORRADOR */}
+      {showDraftBanner && availableDraft && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-2 border-amber-300 dark:border-amber-700/70 rounded-2xl p-5 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="p-2.5 bg-amber-500 text-white rounded-xl shadow-sm shrink-0">
+                <RotateCcw className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-neutral-900 dark:text-white text-base">
+                    ¿Deseas recuperar la sesión que estabas diseñando?
+                  </h4>
+                  <span className="text-xs bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 font-semibold px-2 py-0.5 rounded-full">
+                    Borrador detectado
+                  </span>
+                </div>
+                <p className="text-sm text-neutral-600 dark:text-neutral-300 mt-1">
+                  Se guardó automáticamente el <strong className="text-neutral-900 dark:text-white">{availableDraft.savedAt}</strong>
+                  {availableDraft.datos.cabecera?.objetivo ? (
+                    <> con objetivo <span className="italic font-medium text-neutral-800 dark:text-neutral-200">"{availableDraft.datos.cabecera.objetivo}"</span></>
+                  ) : null}
+                  {availableDraft.datos.tareas?.length ? (
+                    <> y <strong className="text-neutral-900 dark:text-white">{availableDraft.datos.tareas.length} {availableDraft.datos.tareas.length === 1 ? 'tarea' : 'tareas'}</strong></>
+                  ) : null}.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 self-end md:self-center shrink-0">
+              <button
+                type="button"
+                onClick={handleDiscardDraft}
+                className="px-4 py-2 text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors"
+              >
+                Descartar
+              </button>
+              <button
+                type="button"
+                onClick={handleRestoreDraft}
+                className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md shadow-amber-600/20 transition-all active:scale-95"
+              >
+                <RotateCcw size={16} />
+                Recuperar Sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* HEADER SECTION */}
       <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800">
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Calendar className="text-red-500"/> Información de la Sesión</h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-neutral-100 dark:border-neutral-800">
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <Calendar className="text-red-500"/> Información de la Sesión
+          </h3>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {lastSavedText && (
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-medium border border-emerald-200 dark:border-emerald-800/50">
+                <CheckCircle2 size={14} className="text-emerald-500" />
+                {lastSavedText}
+              </span>
+            )}
+            {availableDraft && !showDraftBanner && (
+              <button
+                type="button"
+                onClick={handleRestoreDraft}
+                title="Recuperar los datos del último borrador guardado"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-semibold border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors"
+              >
+                <RotateCcw size={14} />
+                Recuperar Borrador
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleManualSaveDraft}
+              title="Guardar una copia de seguridad en este navegador"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-medium hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+            >
+              <Bookmark size={14} />
+              Guardar Borrador
+            </button>
+            <button
+              type="button"
+              onClick={handleResetForm}
+              title="Limpiar campos y empezar una sesión nueva"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-neutral-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            >
+              <Trash2 size={14} />
+              Empezar de cero
+            </button>
+          </div>
+        </div>
         
         <div className="space-y-4 mb-4">
           <div>
@@ -549,18 +846,41 @@ export function DisenadorSesion({ onSesionGuardada, initialDatos, sesionIdToEdit
       </div>
 
       {/* FLOAT ACTION BAR */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 flex justify-end items-center gap-4 z-40">
-        <span className="text-sm text-neutral-500 font-medium">
-          Asegúrate de haber añadido las imágenes antes de guardar.
-        </span>
-        <button
-          onClick={handleSave}
-          disabled={saving || datos.tareas.length === 0}
-          className="flex items-center gap-2 bg-red-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-700 shadow-xl shadow-red-600/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-          {saving ? 'Generando y Guardando...' : 'Guardar y Generar PDF'}
-        </button>
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-neutral-950/90 backdrop-blur-md border-t border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row justify-between items-center gap-3 z-40">
+        <div className="flex items-center gap-3 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
+          {lastSavedText ? (
+            <span className="flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              {lastSavedText}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 font-medium text-neutral-500">
+              <span className="w-2 h-2 rounded-full bg-neutral-400"></span>
+              Autoguardado activo
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleManualSaveDraft}
+            className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white underline underline-offset-2 transition-colors"
+          >
+            Guardar copia ahora
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          <span className="hidden md:inline text-xs text-neutral-500 font-medium">
+            Asegúrate de haber añadido las imágenes antes de guardar.
+          </span>
+          <button
+            onClick={handleSave}
+            disabled={saving || datos.tareas.length === 0}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-red-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-700 shadow-xl shadow-red-600/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+          >
+            {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+            {saving ? 'Generando y Guardando...' : 'Guardar y Generar PDF'}
+          </button>
+        </div>
       </div>
 
       {/* COMPONENTE OCULTO PARA EL PDF */}
