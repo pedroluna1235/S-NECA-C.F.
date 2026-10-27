@@ -5,7 +5,7 @@ interface PlantillaPDFSesionProps {
   datos: DatosDisenoSesion;
 }
 
-// Estilos base para evitar problemas de html2canvas con oklch de Tailwind v4
+// Estilos base garantizados e independientes de Tailwind / iframes
 const styles = {
   outerContainer: {
     position: 'absolute' as const,
@@ -26,6 +26,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column' as const,
     padding: '20px 24px',
+    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   },
   borderBlack: { borderColor: '#000000' },
   bgGray: { backgroundColor: '#e5e7eb' },
@@ -51,64 +52,76 @@ const TareaCard: React.FC<TareaCardProps> = ({
   const isVeryCompact = compactLevel === 'very-compact';
   const isCompact = compactLevel === 'compact';
 
-  const imageMaxHeight = isFullWidth 
-    ? (isVeryCompact ? 'max-h-28' : isCompact ? 'max-h-36' : 'max-h-44')
-    : (isVeryCompact ? 'max-h-24' : isCompact ? 'max-h-28' : 'max-h-32');
+  const imageMaxHeightPx = isFullWidth 
+    ? (isVeryCompact ? 112 : isCompact ? 144 : 176)
+    : (isVeryCompact ? 96 : isCompact ? 112 : 128);
 
-  const textDescClass = isVeryCompact ? 'text-[9.5px]' : isCompact ? 'text-[10px]' : 'text-[11px]';
-  const textMetaClass = isVeryCompact ? 'text-[9px]' : isCompact ? 'text-[9.5px]' : 'text-[10px]';
+  const textDescFontSize = isVeryCompact ? '9.5px' : isCompact ? '10px' : '11px';
+  const textMetaFontSize = isVeryCompact ? '9px' : isCompact ? '9.5px' : '10px';
 
   return (
-    <div className="border text-xs flex" style={styles.borderBlack}>
+    <div style={{ display: 'flex', border: '1px solid #000000', fontSize: '12px', ...styles.bgWhite }}>
       {/* TIEMPO */}
       <div 
-        className="w-9 border-r flex flex-col items-center justify-center p-1 font-bold text-xs flex-shrink-0" 
-        style={{ ...styles.borderBlack, ...styles.bgWhite }}
+        style={{ 
+          width: '36px', 
+          minWidth: '36px', 
+          borderRight: '1px solid #000000', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          padding: '4px', 
+          fontWeight: 'bold', 
+          fontSize: '12px', 
+          flexShrink: 0, 
+          ...styles.bgWhite 
+        }}
       >
         <span>{tarea.tiempo}'</span>
       </div>
 
       {/* CONTENIDO */}
-      <div className="flex-1 p-2 flex flex-col justify-start" style={styles.bgWhite}>
-        <div className="font-bold mb-1 uppercase text-xs leading-tight tracking-wide" style={{ color: '#111827' }}>
+      <div style={{ flex: 1, padding: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', ...styles.bgWhite }}>
+        <div style={{ fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase', fontSize: '12px', lineHeight: '1.2', letterSpacing: '0.025em', color: '#111827' }}>
           {tarea.titulo}
         </div>
         
         {tarea.descripcion && (
-          <div className={`whitespace-pre-wrap ${textDescClass} leading-snug`} style={{ color: '#1f2937' }}>
+          <div style={{ whiteSpace: 'pre-wrap', fontSize: textDescFontSize, lineHeight: '1.35', color: '#1f2937' }}>
             {tarea.descripcion}
           </div>
         )}
 
         {/* METADATOS: JUNTOS, SIN HUECOS EN MEDIO */}
-        <div className={`mt-1 flex flex-col gap-0.5 ${textMetaClass} leading-tight`}>
+        <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px', fontSize: textMetaFontSize, lineHeight: '1.25' }}>
           {tarea.equipos && (
             <div>
-              <span className="font-bold" style={{ color: '#000000' }}>Equipos:</span> <span style={{ color: '#111827' }}>{tarea.equipos}</span>
+              <span style={{ fontWeight: 'bold', color: '#000000' }}>Equipos:</span> <span style={{ color: '#111827' }}>{tarea.equipos}</span>
             </div>
           )}
 
           {tarea.variables && (
             <div style={styles.textGray700}>
-              <span className="font-bold italic">Variables:</span> <span className="italic">{tarea.variables}</span>
+              <span style={{ fontWeight: 'bold', fontStyle: 'italic' }}>Variables:</span> <span style={{ fontStyle: 'italic' }}>{tarea.variables}</span>
             </div>
           )}
 
           {tarea.responsabilidades && (
             <div style={styles.textGray700}>
-              <span className="font-bold italic">Responsabilidades:</span> <span className="italic">{tarea.responsabilidades}</span>
+              <span style={{ fontWeight: 'bold', fontStyle: 'italic' }}>Responsabilidades:</span> <span style={{ fontStyle: 'italic' }}>{tarea.responsabilidades}</span>
             </div>
           )}
 
           {tarea.roles && (
             <div style={styles.textGray700}>
-              <span className="font-bold">Roles CT:</span> <span>{tarea.roles}</span>
+              <span style={{ fontWeight: 'bold' }}>Roles CT:</span> <span>{tarea.roles}</span>
             </div>
           )}
 
           {tarea.reflexion && (
             <div>
-              <span className="font-bold" style={{ color: '#000000' }}>Reflexión:</span> <span className="font-medium" style={{ color: '#111827' }}>{tarea.reflexion}</span>
+              <span style={{ fontWeight: 'bold', color: '#000000' }}>Reflexión:</span> <span style={{ fontWeight: 500, color: '#111827' }}>{tarea.reflexion}</span>
             </div>
           )}
         </div>
@@ -116,28 +129,49 @@ const TareaCard: React.FC<TareaCardProps> = ({
 
       {/* CAMPO / IMAGEN Y OBJETIVO INDIVIDUAL */}
       <div 
-        className={`${isFullWidth ? 'w-56' : 'w-44'} border-l p-1.5 flex flex-col items-center justify-between gap-1 flex-shrink-0`} 
-        style={{ ...styles.borderBlack, ...styles.bgGreen }}
+        style={{ 
+          width: isFullWidth ? '224px' : '176px', 
+          minWidth: isFullWidth ? '224px' : '176px', 
+          borderLeft: '1px solid #000000', 
+          padding: '6px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          gap: '4px', 
+          flexShrink: 0, 
+          ...styles.bgGreen 
+        }}
       >
-        <div className="flex-1 flex items-center justify-center w-full min-h-0">
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 0 }}>
           {tarea.imagen_url ? (
             <img 
               src={tarea.imagen_url} 
               alt="Tarea" 
-              className={`max-w-full ${imageMaxHeight} object-contain`} 
+              style={{ maxWidth: '100%', maxHeight: `${imageMaxHeightPx}px`, objectFit: 'contain' }}
             />
           ) : (
-            <span className="text-[10px]" style={styles.textGray400}>Sin imagen</span>
+            <span style={{ fontSize: '10px', ...styles.textGray400 }}>Sin imagen</span>
           )}
         </div>
         
         {tarea.objetivo_individual && (
           <div 
-            className="w-full p-1 border text-[8.5px] text-center leading-tight flex-shrink-0" 
-            style={{ ...styles.borderBlack, ...styles.bgWhite }}
+            style={{ 
+              width: '100%', 
+              padding: '4px', 
+              border: '1px solid #000000', 
+              fontSize: '8.5px', 
+              textAlign: 'center', 
+              lineHeight: '1.2', 
+              flexShrink: 0, 
+              ...styles.bgWhite 
+            }}
           >
-            <span className="font-bold block mb-0.5 text-[7.5px] uppercase tracking-wider" style={{ color: '#000000' }}>OBJETIVO INDIVIDUAL</span>
-            <span className="font-medium" style={{ color: '#1f2937' }}>{tarea.objetivo_individual}</span>
+            <span style={{ fontWeight: 'bold', display: 'block', marginBottom: '2px', fontSize: '7.5px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#000000' }}>
+              OBJETIVO INDIVIDUAL
+            </span>
+            <span style={{ fontWeight: 500, color: '#1f2937' }}>{tarea.objetivo_individual}</span>
           </div>
         )}
       </div>
@@ -189,88 +223,148 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
       <div 
         ref={ref}
         id="plantilla-pdf-sesion"
-        className="font-sans"
         style={styles.outerContainer}
       >
         {/* ==================== PÁGINA 1 ==================== */}
         <div className="pdf-page" style={styles.page}>
           {/* CABECERA */}
-          <div className="flex justify-between items-stretch mb-2">
-            <div className="flex-shrink-0 w-24 flex flex-col items-center justify-center border p-1" style={styles.borderBlack}>
-              <img src="/logo.png" alt="SÉNECA C.F." className="w-20 h-auto max-h-16 object-contain" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', marginBottom: '8px' }}>
+            <div 
+              style={{ 
+                width: '88px', 
+                minWidth: '88px', 
+                maxWidth: '88px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                border: '1px solid #000000', 
+                padding: '4px',
+                flexShrink: 0,
+                ...styles.bgWhite 
+              }}
+            >
+              <img 
+                src="/logo.png" 
+                alt="SÉNECA C.F." 
+                style={{ width: '74px', height: 'auto', maxHeight: '58px', objectFit: 'contain', display: 'block' }} 
+              />
             </div>
             
-            <div className="flex-1 ml-3 border text-xs flex flex-col justify-between" style={styles.borderBlack}>
-              <div className="grid grid-cols-4 border-b flex-1" style={styles.borderBlack}>
-                <div className="col-span-1 border-r py-0.5 px-1.5 font-bold text-center flex items-center justify-center uppercase text-[10px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>OBJETIVO</div>
-                <div className="col-span-3 py-0.5 px-2 text-center flex items-center justify-center font-medium text-[11px]">{datos.cabecera.objetivo || '-'}</div>
+            <div 
+              style={{ 
+                flex: 1, 
+                marginLeft: '10px', 
+                border: '1px solid #000000', 
+                fontSize: '12px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'space-between' 
+              }}
+            >
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', borderBottom: '1px solid #000000', flex: 1 }}>
+                <div style={{ gridColumn: 'span 1', borderRight: '1px solid #000000', padding: '2px 6px', fontWeight: 'bold', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', textTransform: 'uppercase', fontSize: '10px', ...styles.bgGray }}>
+                  OBJETIVO
+                </div>
+                <div style={{ gridColumn: 'span 3', padding: '2px 8px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 500, fontSize: '11px', color: '#000000' }}>
+                  {datos.cabecera.objetivo || '-'}
+                </div>
               </div>
-              <div className="grid grid-cols-4 border-b flex-1" style={styles.borderBlack}>
-                <div className="col-span-1 border-r py-0.5 px-1.5 font-bold text-center flex items-center justify-center uppercase text-[10px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>PRINCIPIOS</div>
-                <div className="col-span-3 py-0.5 px-2 text-center flex items-center justify-center font-medium text-[11px]">{datos.cabecera.principios || '-'}</div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', borderBottom: '1px solid #000000', flex: 1 }}>
+                <div style={{ gridColumn: 'span 1', borderRight: '1px solid #000000', padding: '2px 6px', fontWeight: 'bold', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', textTransform: 'uppercase', fontSize: '10px', ...styles.bgGray }}>
+                  PRINCIPIOS
+                </div>
+                <div style={{ gridColumn: 'span 3', padding: '2px 8px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 500, fontSize: '11px', color: '#000000' }}>
+                  {datos.cabecera.principios || '-'}
+                </div>
               </div>
               
-              <div className="grid grid-cols-4 flex-1" style={styles.borderBlack}>
-                <div className="py-0.5 px-1.5 border-r font-bold text-center flex items-center justify-center uppercase text-[9.5px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>MICROCICLO</div>
-                <div className="py-0.5 px-1.5 border-r text-center flex items-center justify-center font-bold text-sm" style={styles.borderBlack}>{datos.cabecera.microcicloNum}</div>
-                <div className="py-0.5 px-1.5 border-r font-bold text-center flex items-center justify-center uppercase text-[9.5px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>FECHA</div>
-                <div className="py-0.5 px-1.5 text-center flex flex-col items-center justify-center leading-tight">
-                  <span className="font-medium text-[11px]">{datos.cabecera.fecha}</span>
-                  <span className="text-[9.5px]" style={{ color: '#52525b' }}>{datos.cabecera.hora}</span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', flex: 1 }}>
+                <div style={{ gridColumn: 'span 1', borderRight: '1px solid #000000', padding: '2px 6px', fontWeight: 'bold', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', textTransform: 'uppercase', fontSize: '9.5px', ...styles.bgGray }}>
+                  MICROCICLO
+                </div>
+                <div style={{ gridColumn: 'span 1', borderRight: '1px solid #000000', padding: '2px 6px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px', color: '#000000' }}>
+                  {datos.cabecera.microcicloNum}
+                </div>
+                <div style={{ gridColumn: 'span 1', borderRight: '1px solid #000000', padding: '2px 6px', fontWeight: 'bold', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', textTransform: 'uppercase', fontSize: '9.5px', ...styles.bgGray }}>
+                  FECHA
+                </div>
+                <div style={{ gridColumn: 'span 1', padding: '2px 6px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', lineHeight: '1.2' }}>
+                  <span style={{ fontWeight: 500, fontSize: '11px', color: '#000000' }}>{datos.cabecera.fecha}</span>
+                  <span style={{ fontSize: '9.5px', color: '#52525b' }}>{datos.cabecera.hora}</span>
                 </div>
               </div>
             </div>
 
-            <div className="ml-3 w-24 border text-xs flex flex-col" style={styles.borderBlack}>
-               <div className="border-b py-0.5 px-1 font-bold text-center text-[9.5px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>SESIÓN</div>
-               <div className="py-1 text-center font-bold text-xl flex-1 flex items-center justify-center">{datos.cabecera.sesionNum}</div>
+            <div 
+              style={{ 
+                marginLeft: '10px', 
+                width: '88px', 
+                minWidth: '88px', 
+                maxWidth: '88px', 
+                border: '1px solid #000000', 
+                fontSize: '12px', 
+                display: 'flex', 
+                flexDirection: 'column',
+                flexShrink: 0
+              }}
+            >
+               <div style={{ borderBottom: '1px solid #000000', padding: '2px 4px', fontWeight: 'bold', textAlign: 'center', fontSize: '9.5px', ...styles.bgGray }}>
+                 SESIÓN
+               </div>
+               <div style={{ padding: '4px', textAlign: 'center', fontWeight: 'bold', fontSize: '22px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000000' }}>
+                 {datos.cabecera.sesionNum}
+               </div>
             </div>
           </div>
 
           {/* MATERIAL */}
-          <div className="border mb-2 text-xs" style={styles.borderBlack}>
-            <div className="border-b py-0.5 px-1 font-bold text-center text-[9.5px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>MATERIAL</div>
-            <div className="grid grid-cols-10 text-center text-[8.5px] font-bold border-b" style={{ ...styles.borderBlack, ...styles.bgWhite }}>
-              <div className="border-r py-0.5" style={styles.borderBlack}>BALONES</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>PETOS 1</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>PETOS 2</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>PETOS 3</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>CONOS</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>AROS</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>BANCOS</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>FITBALL</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>PICAS</div>
-              <div className="py-0.5">PORTERÍAS</div>
+          <div style={{ border: '1px solid #000000', marginBottom: '8px', fontSize: '12px' }}>
+            <div style={{ borderBottom: '1px solid #000000', padding: '2px 4px', fontWeight: 'bold', textAlign: 'center', fontSize: '9.5px', ...styles.bgGray }}>
+              MATERIAL
             </div>
-            <div className="grid grid-cols-10 text-center text-[10px] font-semibold">
-              <div className="border-r py-0.5" style={styles.borderBlack}>{datos.material.balones || ''}</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>{datos.material.petos1 || ''}</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>{datos.material.petos2 || ''}</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>{datos.material.petos3 || ''}</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>{datos.material.conos || ''}</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>{datos.material.aros || ''}</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>{datos.material.bancos || ''}</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>{datos.material.fitball || ''}</div>
-              <div className="border-r py-0.5" style={styles.borderBlack}>{datos.material.picas || ''}</div>
-              <div className="py-0.5">{datos.material.porterias || ''}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(0, 1fr))', textAlign: 'center', fontSize: '8.5px', fontWeight: 'bold', borderBottom: '1px solid #000000', ...styles.bgWhite }}>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>BALONES</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>PETOS 1</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>PETOS 2</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>PETOS 3</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>CONOS</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>AROS</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>BANCOS</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>FITBALL</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>PICAS</div>
+              <div style={{ padding: '2px 0' }}>PORTERÍAS</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(0, 1fr))', textAlign: 'center', fontSize: '10px', fontWeight: 600 }}>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>{datos.material.balones || ''}</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>{datos.material.petos1 || ''}</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>{datos.material.petos2 || ''}</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>{datos.material.petos3 || ''}</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>{datos.material.conos || ''}</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>{datos.material.aros || ''}</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>{datos.material.bancos || ''}</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>{datos.material.fitball || ''}</div>
+              <div style={{ borderRight: '1px solid #000000', padding: '2px 0' }}>{datos.material.picas || ''}</div>
+              <div style={{ padding: '2px 0' }}>{datos.material.porterias || ''}</div>
             </div>
           </div>
 
           {/* CUERPO PRINCIPAL PÁGINA 1: TAREAS + JUGADORES */}
-          <div className="flex gap-2.5 flex-1 min-h-0">
+          <div style={{ display: 'flex', gap: '10px', flex: 1, minHeight: 0 }}>
             {/* TAREAS PÁGINA 1 */}
-            <div className="flex-1 flex flex-col gap-1.5 min-h-0">
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px', minHeight: 0 }}>
               {page1Tareas.map((tarea, index) => (
                 <TareaCard key={index} tarea={tarea} isFullWidth={false} compactLevel={compactLevel} />
               ))}
               
               {/* KPIS (si caben en página 1) */}
               {kpisOnPage1 && datos.kpis && (
-                <div className="border text-xs flex flex-col flex-shrink-0" style={styles.borderBlack}>
-                  <div className="border-b py-0.5 px-2 font-bold text-center text-[9px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>
+                <div style={{ border: '1px solid #000000', fontSize: '12px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                  <div style={{ borderBottom: '1px solid #000000', padding: '2px 6px', fontWeight: 'bold', textAlign: 'center', fontSize: '9px', ...styles.bgGray }}>
                     KPIS
                   </div>
-                  <div className="p-1.5 whitespace-pre-wrap text-[10px] leading-tight" style={styles.bgWhite}>
+                  <div style={{ padding: '6px', whiteSpace: 'pre-wrap', fontSize: '10px', lineHeight: '1.25', ...styles.bgWhite }}>
                     {datos.kpis}
                   </div>
                 </div>
@@ -278,12 +372,12 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
             </div>
 
             {/* JUGADORES */}
-            <div className="w-44 text-xs flex flex-col flex-shrink-0">
-              <div className="border" style={styles.borderBlack}>
-                <div className="border-b py-1 px-1 font-bold text-center text-[10px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>
+            <div style={{ width: '176px', minWidth: '176px', maxWidth: '176px', fontSize: '12px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+              <div style={{ border: '1px solid #000000' }}>
+                <div style={{ borderBottom: '1px solid #000000', padding: '4px', fontWeight: 'bold', textAlign: 'center', fontSize: '10px', ...styles.bgGray }}>
                   JUGADORES DISPONIBLES
                 </div>
-                <div className="flex flex-col">
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {datos.jugadores.filter(j => {
                     const isHidden = j.nombre.toLowerCase().includes('javier valverde') || j.nombre.toLowerCase().includes('carlos gonzález') || j.nombre.toLowerCase().includes('carlos gonzalez');
                     if (isHidden) return j.disponible;
@@ -291,17 +385,23 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
                   }).map((jugador, index) => (
                     <div 
                       key={jugador.id} 
-                      className={`border-b py-1 px-1.5 flex items-center justify-center text-[10px] leading-tight text-center ${
-                        !jugador.disponible ? 'line-through' : ''
-                      }`}
-                      style={
-                        !jugador.disponible 
-                          ? { ...styles.borderBlack, ...styles.bgRed, ...styles.textRed }
-                          : { ...styles.borderBlack, ...styles.bgWhite, ...(jugador.manual ? { color: '#2563eb' } : {}) }
-                      }
+                      style={{
+                        borderBottom: '1px solid #000000',
+                        padding: '3px 4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '9.5px',
+                        lineHeight: '1.2',
+                        textAlign: 'center',
+                        textDecoration: !jugador.disponible ? 'line-through' : 'none',
+                        ...(!jugador.disponible 
+                          ? { ...styles.bgRed, ...styles.textRed } 
+                          : { ...styles.bgWhite, ...(jugador.manual ? { color: '#2563eb' } : { color: '#000000' }) })
+                      }}
                     >
-                      <span className="font-bold mr-1">{index + 1}.</span>
-                      <span className="font-medium whitespace-normal break-words">{jugador.nombre.toUpperCase()}</span>
+                      <span style={{ fontWeight: 'bold', marginRight: '4px' }}>{index + 1}.</span>
+                      <span style={{ fontWeight: 500, wordBreak: 'break-word' }}>{jugador.nombre.toUpperCase()}</span>
                     </div>
                   ))}
                 </div>
@@ -309,18 +409,30 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
 
               {/* SESIONES INDIVIDUALES */}
               {datos.sesionesIndividuales && datos.sesionesIndividuales.length > 0 && (
-                <div className="border mt-2" style={styles.borderBlack}>
-                  <div className="border-b py-0.5 px-1 font-bold text-center text-[10px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>
+                <div style={{ border: '1px solid #000000', marginTop: '8px' }}>
+                  <div style={{ borderBottom: '1px solid #000000', padding: '3px 4px', fontWeight: 'bold', textAlign: 'center', fontSize: '10px', ...styles.bgGray }}>
                     SESIÓN INDIVIDUAL
                   </div>
-                  <div className="flex flex-col p-1 gap-1" style={styles.bgWhite}>
+                  <div style={{ display: 'flex', flexDirection: 'column', padding: '4px', gap: '4px', ...styles.bgWhite }}>
                     {datos.sesionesIndividuales.map((sesionInd) => (
-                      <div key={sesionInd.id} className="text-[10px]">
-                        <div className="font-bold leading-tight">{sesionInd.nombres.toUpperCase()}</div>
-                        <div className="flex flex-wrap gap-1 mt-0.5">
-                          {sesionInd.video && <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', borderColor: '#BFDBFE', borderWidth: '1px', borderStyle: 'solid' }} className="px-1 py-0.2 rounded text-[8px] font-semibold">VÍDEO</span>}
-                          {sesionInd.entrenamiento && <span style={{ backgroundColor: '#DCFCE7', color: '#166534', borderColor: '#BBF7D0', borderWidth: '1px', borderStyle: 'solid' }} className="px-1 py-0.2 rounded text-[8px] font-semibold">ENTRENO</span>}
-                          {sesionInd.charla && <span style={{ backgroundColor: '#F3E8FF', color: '#6B21A8', borderColor: '#E9D5FF', borderWidth: '1px', borderStyle: 'solid' }} className="px-1 py-0.2 rounded text-[8px] font-semibold">CHARLA</span>}
+                      <div key={sesionInd.id} style={{ fontSize: '10px' }}>
+                        <div style={{ fontWeight: 'bold', lineHeight: '1.2', color: '#000000' }}>{sesionInd.nombres.toUpperCase()}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '2px' }}>
+                          {sesionInd.video && (
+                            <span style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', border: '1px solid #BFDBFE', padding: '1px 3px', borderRadius: '4px', fontSize: '8px', fontWeight: 600 }}>
+                              VÍDEO
+                            </span>
+                          )}
+                          {sesionInd.entrenamiento && (
+                            <span style={{ backgroundColor: '#DCFCE7', color: '#166534', border: '1px solid #BBF7D0', padding: '1px 3px', borderRadius: '4px', fontSize: '8px', fontWeight: 600 }}>
+                              ENTRENO
+                            </span>
+                          )}
+                          {sesionInd.charla && (
+                            <span style={{ backgroundColor: '#F3E8FF', color: '#6B21A8', border: '1px solid #E9D5FF', padding: '1px 3px', borderRadius: '4px', fontSize: '8px', fontWeight: 600 }}>
+                              CHARLA
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -335,38 +447,38 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
         {additionalPages.map((page, pIndex) => (
           <div key={pIndex} className="pdf-page" style={styles.page}>
             {/* CABECERA PÁGINA ADICIONAL */}
-            <div className="flex justify-between items-center border mb-2.5 p-1.5 text-xs" style={styles.borderBlack}>
-              <div className="flex items-center gap-2">
-                <img src="/logo.png" alt="SÉNECA C.F." className="w-7 h-7 object-contain" />
-                <span className="font-bold text-xs" style={{ color: '#000000' }}>SÉNECA C.F.</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #000000', marginBottom: '10px', padding: '6px', fontSize: '12px', ...styles.bgWhite }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img src="/logo.png" alt="SÉNECA C.F." style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+                <span style={{ fontWeight: 'bold', fontSize: '12px', color: '#000000' }}>SÉNECA C.F.</span>
                 <span style={{ color: '#9ca3af' }}>|</span>
-                <span className="font-semibold text-xs" style={{ color: '#000000' }}>SESIÓN {datos.cabecera.sesionNum}</span>
+                <span style={{ fontWeight: 600, fontSize: '12px', color: '#000000' }}>SESIÓN {datos.cabecera.sesionNum}</span>
                 {datos.cabecera.objetivo && (
                   <>
                     <span style={{ color: '#9ca3af' }}>-</span>
-                    <span className="font-medium text-[11px]" style={{ color: '#374151' }}>{datos.cabecera.objetivo}</span>
+                    <span style={{ fontWeight: 500, fontSize: '11px', color: '#374151' }}>{datos.cabecera.objetivo}</span>
                   </>
                 )}
               </div>
-              <div className="flex items-center gap-2.5 font-medium text-[10px]" style={{ color: '#4b5563' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 500, fontSize: '10px', color: '#4b5563' }}>
                 <span>Microciclo: <strong style={{ color: '#000000' }}>{datos.cabecera.microcicloNum}</strong></span>
                 <span>{datos.cabecera.fecha} {datos.cabecera.hora}</span>
               </div>
             </div>
 
             {/* TAREAS PÁGINA ADICIONAL (A ANCHO COMPLETO) */}
-            <div className="flex flex-col gap-3 flex-1 min-h-0">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minHeight: 0 }}>
               {page.tareas.map((tarea, tIdx) => (
                 <TareaCard key={tIdx} tarea={tarea} isFullWidth={true} compactLevel={compactLevel} />
               ))}
 
               {/* KPIS */}
               {page.hasKpis && datos.kpis && (
-                <div className="border text-xs flex flex-col" style={styles.borderBlack}>
-                  <div className="border-b py-0.5 px-2 font-bold text-center text-[10px]" style={{ ...styles.borderBlack, ...styles.bgGray }}>
+                <div style={{ border: '1px solid #000000', fontSize: '12px', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ borderBottom: '1px solid #000000', padding: '4px', fontWeight: 'bold', textAlign: 'center', fontSize: '10px', ...styles.bgGray }}>
                     KPIS
                   </div>
-                  <div className="p-2.5 whitespace-pre-wrap text-[11px] leading-relaxed" style={styles.bgWhite}>
+                  <div style={{ padding: '8px', whiteSpace: 'pre-wrap', fontSize: '11px', lineHeight: '1.4', ...styles.bgWhite }}>
                     {datos.kpis}
                   </div>
                 </div>
@@ -380,4 +492,3 @@ export const PlantillaPDFSesion = React.forwardRef<HTMLDivElement, PlantillaPDFS
 );
 
 PlantillaPDFSesion.displayName = 'PlantillaPDFSesion';
-

@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -55,6 +56,43 @@ function sanitizeOklchColors(clonedDoc: Document) {
   });
 }
 
+async function captureElementImage(target: HTMLElement): Promise<string> {
+  // 1. Intentar toPng (html-to-image): utiliza el motor nativo del navegador,
+  // respeta al 100% Flexbox, CSS Grid, fuentes y estilos inline/Tailwind sin problemas de iframe.
+  try {
+    const dataUrl = await toPng(target, {
+      quality: 1,
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+      cacheBust: false,
+      style: {
+        display: 'flex',
+        visibility: 'visible',
+        position: 'static',
+        transform: 'none',
+        margin: '0',
+      }
+    });
+    return dataUrl;
+  } catch (toPngErr) {
+    console.warn('toPng failed, falling back to html2canvas', toPngErr);
+    const canvas = await html2canvas(target, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      windowWidth: 800,
+      windowHeight: 1131,
+      width: 800,
+      height: 1131,
+      scrollY: 0,
+      scrollX: 0,
+      onclone: (clonedDoc) => sanitizeOklchColors(clonedDoc)
+    });
+    return canvas.toDataURL('image/jpeg', 0.98);
+  }
+}
+
 export async function generateAndUploadPDF(elementId: string, filename: string): Promise<string> {
   const element = document.getElementById(elementId);
   if (!element) {
@@ -83,6 +121,25 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
   element.style.overflow = 'visible';
 
   try {
+    // Asegurar que las fuentes y las imágenes estén completamente cargadas antes de capturar
+    if (document.fonts) {
+      try {
+        await document.fonts.ready;
+      } catch {
+        // ignore
+      }
+    }
+    const allImages = Array.from(element.querySelectorAll('img'));
+    await Promise.all(
+      allImages.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      })
+    );
+
     const pageElements = Array.from(element.querySelectorAll<HTMLElement>('.pdf-page'));
     const pdf = new jsPDF({
       orientation: 'portrait',
@@ -100,57 +157,34 @@ export async function generateAndUploadPDF(elementId: string, filename: string):
           pdf.addPage();
         }
 
-        // Asegurar que solo la página actual está visible durante la captura para evitar bugs de scroll/offset
+        // Asegurar que solo la página actual está visible durante la captura
         pageElements.forEach((p, idx) => {
           p.style.display = idx === i ? 'flex' : 'none';
         });
 
         const pageEl = pageElements[i];
-        const canvas = await html2canvas(pageEl, {
-          scale: 2, // Mayor calidad
-          useCORS: true, // Permitir imágenes de otros dominios
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: 800,
-          windowHeight: 1131,
-          width: 800,
-          height: 1131,
-          scrollY: 0,
-          scrollX: 0,
-          onclone: (clonedDoc) => sanitizeOklchColors(clonedDoc)
-        });
+        const imgData = await captureElementImage(pageEl);
+        const format = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.98);
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, format, 0, 0, pdfWidth, pdfHeight);
       }
     } else {
       // Fallback para elementos sin páginas explícitas
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-        width: element.scrollWidth,
-        height: element.scrollHeight,
-        scrollY: 0,
-        scrollX: 0,
-        onclone: (clonedDoc) => sanitizeOklchColors(clonedDoc)
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      const imgData = await captureElementImage(element);
+      const format = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
       let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      pdf.addImage(imgData, format, 0, position, pdfWidth, imgHeight);
       heightLeft -= pdfHeight;
 
       while (heightLeft > 0) {
         position = position - pdfHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+        pdf.addImage(imgData, format, 0, position, pdfWidth, imgHeight);
         heightLeft -= pdfHeight;
       }
     }
